@@ -1,0 +1,12 @@
+#!/bin/sh
+# Portable wrapper
+DIR=$(cd "$(dirname "$0")" && pwd)
+if [ -f "$DIR/maven/bin/mvn" ]; then
+  echo "[QuestLearn] Using portable Maven: $DIR/maven/bin/mvn"
+  exec "$DIR/maven/bin/mvn" "$@"
+fi
+if command -v mvn >/dev/null 2>&1; then
+  exec mvn "$@"
+fi
+echo "Maven not found"
+exit 1

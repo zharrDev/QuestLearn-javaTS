@@ -1,0 +1,714 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    font-family: 'Inter', 'Plus Jakarta Sans', sans-serif;
+    image-rendering: pixelated;
+    -ms-interpolation-mode: nearest-neighbor;
+  }
+
+  body {
+    background-color: #141B22;
+    color: #F4E9D8;
+  }
+
+  ::selection {
+    background-color: #E8A93B;
+    color: #1B2430;
+  }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb {
+    background: #2A3444;
+    border: 2px solid #141B22;
+  }
+  ::-webkit-scrollbar-track { background: #0F1218; }
+}
+
+@layer components {
+  /* ===== PIXEL BORDER SYSTEM ===== */
+  .pixel-border {
+    border: 3px solid #F4E9D8;
+    box-shadow: 4px 4px 0px #000000;
+  }
+
+  .pixel-border-amber {
+    border: 3px solid #E8A93B;
+    box-shadow: 4px 4px 0px #B8842A;
+  }
+
+  .pixel-border-green {
+    border: 3px solid #6FCF6F;
+    box-shadow: 4px 4px 0px #4A9C4A;
+  }
+
+  .pixel-border-coral {
+    border: 3px solid #E37B6B;
+    box-shadow: 4px 4px 0px #B85A4A;
+  }
+
+  /* ===== PIXEL PANEL ===== */
+  .pixel-panel {
+    background-color: #1B2430;
+    border: 3px solid #2A3444;
+    box-shadow: 4px 4px 0px #000000, inset 2px 2px 0px rgba(255,255,255,0.05);
+  }
+
+  .pixel-panel-light {
+    background-color: #1E2A38;
+    border: 2px solid #2A3444;
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  /* ===== PIXEL BUTTON SYSTEM ===== */
+  .pixel-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1.25rem;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    line-height: 1.6;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 3px solid;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    user-select: none;
+  }
+
+  .pixel-btn:active:not(:disabled) {
+    transform: translate(2px, 2px);
+    box-shadow: 0px 0px 0px !important;
+  }
+
+  .pixel-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .pixel-btn-primary {
+    background-color: #E8A93B;
+    color: #1B2430;
+    border-color: #B8842A;
+    box-shadow: 4px 4px 0px #6B4E1A;
+  }
+
+  .pixel-btn-primary:hover:not(:disabled) {
+    background-color: #F0B84E;
+    box-shadow: 4px 4px 0px #6B4E1A, 0 0 12px #E8A93B44;
+  }
+
+  .pixel-btn-success {
+    background-color: #6FCF6F;
+    color: #1B2430;
+    border-color: #4A9C4A;
+    box-shadow: 4px 4px 0px #2D6B2D;
+  }
+
+  .pixel-btn-success:hover:not(:disabled) {
+    background-color: #82E082;
+    box-shadow: 4px 4px 0px #2D6B2D, 0 0 12px #6FCF6F44;
+  }
+
+  .pixel-btn-danger {
+    background-color: #E37B6B;
+    color: #1B2430;
+    border-color: #B85A4A;
+    box-shadow: 4px 4px 0px #8A3A2A;
+  }
+
+  .pixel-btn-danger:hover:not(:disabled) {
+    background-color: #ED9181;
+    box-shadow: 4px 4px 0px #8A3A2A, 0 0 12px #E37B6B44;
+  }
+
+  .pixel-btn-ghost {
+    background-color: transparent;
+    color: #F4E9D8;
+    border-color: #2A3444;
+    box-shadow: 4px 4px 0px #000000;
+  }
+
+  .pixel-btn-ghost:hover:not(:disabled) {
+    background-color: #1E2A38;
+    border-color: #3A4A5A;
+    color: #FFFFFF;
+  }
+
+  .pixel-btn-navy {
+    background-color: #1B2430;
+    color: #F4E9D8;
+    border-color: #2A3444;
+    box-shadow: 4px 4px 0px #000000;
+  }
+
+  .pixel-btn-navy:hover:not(:disabled) {
+    background-color: #243040;
+    border-color: #3A4A5A;
+  }
+
+  /* ===== PIXEL INPUT ===== */
+  .pixel-input {
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    background-color: #0F1218;
+    border: 3px solid #2A3444;
+    color: #F4E9D8;
+    font-family: 'VT323', monospace;
+    font-size: 18px;
+    outline: none;
+    transition: border-color 0.15s;
+    box-shadow: inset 2px 2px 0px rgba(0,0,0,0.3);
+  }
+
+  .pixel-input::placeholder {
+    color: #4A5568;
+  }
+
+  .pixel-input:focus {
+    border-color: #E8A93B;
+    box-shadow: inset 2px 2px 0px rgba(0,0,0,0.3), 0 0 0 2px #E8A93B33;
+  }
+
+  .pixel-input-error {
+    border-color: #E37B6B;
+  }
+
+  .pixel-select {
+    @apply pixel-input cursor-pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23F4E9D8' d='M2 4h8L6 8z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 2.5rem;
+  }
+
+  /* ===== PIXEL PROGRESS ===== */
+  .pixel-progress {
+    height: 12px;
+    background-color: #0F1218;
+    border: 2px solid #2A3444;
+    overflow: hidden;
+  }
+
+  .pixel-progress-fill {
+    height: 100%;
+    transition: width 0.5s ease;
+  }
+
+  /* ===== PIXEL CARD HOVER ===== */
+  .pixel-card-hover:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px #000000;
+  }
+
+  .pixel-card-hover:active {
+    transform: translate(0px, 0px);
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  /* ===== HEART ICONS ===== */
+  .pixel-heart {
+    display: inline-block;
+    width: 16px;
+    height: 14px;
+    background: #E37B6B;
+    position: relative;
+    clip-path: polygon(50% 100%, 0% 35%, 15% 0%, 50% 20%, 85% 0%, 100% 35%);
+  }
+
+  .pixel-heart-empty {
+    background: #2A3444;
+  }
+
+  /* ===== SCANLINES ===== */
+  .scanlines::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+  }
+
+  /* ===== WORLD BACKGROUNDS ===== */
+  .bg-world-english {
+    background: linear-gradient(180deg, #8FC1D9 0%, #5C8A4A 60%, #3D5A2E 100%);
+  }
+
+  .bg-world-math {
+    background: linear-gradient(180deg, #1F4E4A 0%, #D9A24B 60%, #8B6F47 100%);
+  }
+
+  .bg-world-logic {
+    background: linear-gradient(180deg, #16213A 0%, #1E3A2E 60%, #0F1F17 100%);
+  }
+
+  /* ===== TOAST ===== */
+  .pixel-toast {
+    background-color: #1B2430;
+    border: 3px solid;
+    box-shadow: 4px 4px 0px #000000;
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+  }
+
+  .pixel-toast-success { border-color: #6FCF6F; }
+  .pixel-toast-error { border-color: #E37B6B; }
+  .pixel-toast-warning { border-color: #E8A93B; }
+  .pixel-toast-info { border-color: #8FC1D9; }
+
+  /* ============================================================
+     WORLD MAP PAGE — Portal System
+     ============================================================ */
+
+  /* Portal ring — base circle around each world preview */
+  .portal-ring {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    border: 5px solid #2A3444;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .portal-ring::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    z-index: 1;
+    pointer-events: none;
+    transition: box-shadow 0.3s ease;
+  }
+
+  /* Portal — Village (terracotta) */
+  .portal-village {
+    border-color: #7A3A2A;
+  }
+  .portal-village::before {
+    box-shadow: inset 0 0 15px #B5533C44;
+  }
+  .portal-village:hover {
+    border-color: #D4795E;
+    transform: scale(1.05);
+    box-shadow: 0 0 24px #D4795E88, 0 0 48px #D4795E44;
+  }
+  .portal-village:hover::before {
+    box-shadow: inset 0 0 20px #D4795E66;
+  }
+
+  /* Portal — Desert (amber/gold) */
+  .portal-desert {
+    border-color: #8A6A20;
+  }
+  .portal-desert::before {
+    box-shadow: inset 0 0 15px #C4903044;
+  }
+  .portal-desert:hover {
+    border-color: #D9A24B;
+    transform: scale(1.05);
+    box-shadow: 0 0 24px #D9A24B88, 0 0 48px #D9A24B44;
+  }
+  .portal-desert:hover::before {
+    box-shadow: inset 0 0 20px #D9A24B66;
+  }
+
+  /* Portal — Forest (green) */
+  .portal-forest {
+    border-color: #1A3D2A;
+  }
+  .portal-forest::before {
+    box-shadow: inset 0 0 15px #2A5E4244;
+  }
+  .portal-forest:hover {
+    border-color: #3D8B5F;
+    transform: scale(1.05);
+    box-shadow: 0 0 24px #3D8B5F88, 0 0 48px #3D8B5F44;
+  }
+  .portal-forest:hover::before {
+    box-shadow: inset 0 0 20px #3D8B5F66;
+  }
+
+  /* Portal — Completed state */
+  .portal-completed {
+    opacity: 1;
+  }
+  .portal-completed::after {
+    content: '✓';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    background: #6FCF6F;
+    color: #1B2430;
+    border: 2px solid #4A9C4A;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    z-index: 10;
+    box-shadow: 2px 2px 0px #000;
+  }
+
+  /* Portal — Locked/dimmed state */
+  .portal-dimmed {
+    opacity: 0.55;
+    filter: saturate(0.5);
+  }
+  .portal-dimmed:hover {
+    opacity: 0.8;
+    filter: saturate(0.8);
+  }
+
+  /* Portal preview image inside the circle */
+  .portal-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    image-rendering: pixelated;
+    transition: transform 0.3s ease;
+  }
+
+  .portal-ring:hover .portal-preview {
+    transform: scale(1.1);
+  }
+
+  /* Portal fallback gradient (when no image) */
+  .portal-gradient-village {
+    background: linear-gradient(135deg, #8FC1D9 0%, #B5533C 50%, #5C8A4A 100%);
+  }
+  .portal-gradient-desert {
+    background: linear-gradient(135deg, #1F4E4A 0%, #D9A24B 50%, #8B6F47 100%);
+  }
+  .portal-gradient-forest {
+    background: linear-gradient(135deg, #16213A 0%, #2A5E42 50%, #F2C14E 100%);
+  }
+
+  /* Dashed path connecting portals */
+  .portal-path {
+    position: absolute;
+    border: 2px dashed #2A3444;
+    pointer-events: none;
+  }
+
+  /* Wizard marker on world map */
+  .wizard-marker {
+    position: relative;
+    width: 48px;
+    height: 48px;
+    animation: wizard-idle 2s ease-in-out infinite;
+  }
+
+  .wizard-marker::after {
+    content: '🧙';
+    font-size: 32px;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  .wizard-marker .speech-bubble {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1B2430;
+    border: 2px solid #2A3444;
+    padding: 4px 8px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 6px;
+    color: #F4E9D8;
+    white-space: nowrap;
+    margin-bottom: 4px;
+    box-shadow: 2px 2px 0px #000;
+  }
+
+  .wizard-marker .speech-bubble::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #2A3444;
+  }
+
+  /* Stars background */
+  .starfield {
+    position: relative;
+    overflow: hidden;
+    background: radial-gradient(ellipse at 50% 0%, #1B2430 0%, #0F1218 70%, #080C12 100%);
+  }
+
+  .star {
+    position: absolute;
+    border-radius: 50%;
+    background: #F4E9D8;
+  }
+
+  .star-sm { width: 1px; height: 1px; }
+  .star-md { width: 2px; height: 2px; }
+  .star-lg { width: 3px; height: 3px; }
+
+  /* ============================================================
+     QUEST HUD — In-game status overlay
+     ============================================================ */
+
+  .quest-hud {
+    position: sticky;
+    top: 52px;
+    z-index: 30;
+    background: rgba(15, 18, 24, 0.92);
+    backdrop-filter: blur(4px);
+    border-bottom: 2px solid #2A3444;
+    padding: 8px 16px;
+  }
+
+  .quest-hud-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .hud-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    padding: 4px 10px;
+    border: 2px solid;
+  }
+
+  /* HUD XP (amber) */
+  .hud-xp {
+    color: #E8A93B;
+    background: rgba(232, 169, 59, 0.1);
+    border-color: rgba(232, 169, 59, 0.3);
+  }
+
+  /* HUD Lives (coral) */
+  .hud-lives {
+    color: #E37B6B;
+    background: rgba(227, 123, 107, 0.1);
+    border-color: rgba(227, 123, 107, 0.3);
+  }
+
+  /* HUD Level (green) */
+  .hud-level {
+    color: #6FCF6F;
+    background: rgba(111, 207, 111, 0.1);
+    border-color: rgba(111, 207, 111, 0.3);
+  }
+
+  /* HUD World name (village/desert/forest) */
+  .hud-world-village {
+    color: #D4795E;
+    background: rgba(181, 83, 60, 0.1);
+    border-color: rgba(181, 83, 60, 0.3);
+  }
+
+  .hud-world-desert {
+    color: #D9A24B;
+    background: rgba(217, 162, 75, 0.1);
+    border-color: rgba(217, 162, 75, 0.3);
+  }
+
+  .hud-world-forest {
+    color: #3D8B5F;
+    background: rgba(42, 94, 66, 0.1);
+    border-color: rgba(61, 139, 95, 0.3);
+  }
+
+  /* ============================================================
+     LEVEL MAP — World-background version
+     ============================================================ */
+
+  .level-map-bg {
+    position: relative;
+    min-height: 100vh;
+    background-size: cover;
+    background-position: center bottom;
+    image-rendering: pixelated;
+  }
+
+  .level-map-bg::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgba(15, 18, 24, 0.85) 0%,
+      rgba(15, 18, 24, 0.6) 20%,
+      rgba(15, 18, 24, 0.3) 60%,
+      rgba(15, 18, 24, 0.7) 100%
+    );
+    pointer-events: none;
+  }
+
+  /* Level node on the map */
+  .level-node {
+    position: relative;
+    padding: 16px 20px;
+    border: 3px solid #2A3444;
+    background: rgba(27, 36, 48, 0.92);
+    backdrop-filter: blur(4px);
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .level-node:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0px #000000;
+  }
+
+  .level-node:active {
+    transform: translate(0, 0);
+    box-shadow: 2px 2px 0px #000000;
+  }
+
+  /* Level node — completed (green) */
+  .level-node-completed {
+    border-color: #4A9C4A;
+  }
+  .level-node-completed:hover {
+    border-color: #6FCF6F;
+  }
+
+  /* Level node — open (amber glow) */
+  .level-node-open {
+    border-color: #B8842A;
+    animation: glow-amber 2s ease-in-out infinite;
+  }
+  .level-node-open:hover {
+    border-color: #E8A93B;
+    box-shadow: 6px 6px 0px #000000, 0 0 16px #E8A93B44;
+  }
+
+  /* Level node — locked (dim) */
+  .level-node-locked {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .level-node-locked:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Level connector line */
+  .level-connector {
+    width: 3px;
+    background: #2A3444;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .level-connector-active {
+    background: linear-gradient(180deg, #6FCF6F, #E8A93B);
+  }
+
+  /* ============================================================
+     WORLD-SPECIFIC NODE ACCENTS
+     ============================================================ */
+
+  /* Village nodes — terracotta accent */
+  .node-village .level-node-completed {
+    border-color: #7A3A2A;
+  }
+  .node-village .level-node-completed:hover {
+    border-color: #B5533C;
+    box-shadow: 6px 6px 0px #000000, 0 0 16px #B5533C44;
+  }
+  .node-village .level-node-open {
+    border-color: #8A4A30;
+    animation: glow-village 2.5s ease-in-out infinite;
+  }
+  .node-village .level-node-open:hover {
+    border-color: #D4795E;
+    box-shadow: 6px 6px 0px #000000, 0 0 16px #D4795E44;
+  }
+
+  /* Desert nodes — gold accent */
+  .node-desert .level-node-completed {
+    border-color: #8A6A20;
+  }
+  .node-desert .level-node-completed:hover {
+    border-color: #C49030;
+    box-shadow: 6px 6px 0px #000000, 0 0 16px #C4903044;
+  }
+  .node-desert .level-node-open {
+    border-color: #9A7A28;
+    animation: glow-desert 2.5s ease-in-out infinite;
+  }
+  .node-desert .level-node-open:hover {
+    border-color: #D9A24B;
+    box-shadow: 6px 6px 0px #000000, 0 0 16px #D9A24B44;
+  }
+
+  /* Forest nodes — green accent */
+  .node-forest .level-node-completed {
+    border-color: #1A3D2A;
+  }
+  .node-forest .level-node-completed:hover {
+    border-color: #2A5E42;
+    box-shadow: 6px 6px 0px #000000, 0 0 16px #2A5E4244;
+  }
+  .node-forest .level-node-open {
+    border-color: #2A5040;
+    animation: glow-forest 2.5s ease-in-out infinite;
+  }
+  .node-forest .level-node-open:hover {
+    border-color: #3D8B5F;
+    box-shadow: 6px 6px 0px #000000, 0 0 16px #3D8B5F44;
+  }
+
+  /* ============================================================
+     COLOR CONSISTENCY — No-clash interactive states
+     ============================================================ */
+
+  /*
+   * COLOR MAP (no conflicts):
+   *
+   * PRIMARY ACTIONS:  #E8A93B → #F0B84E (hover) → #B8842A (border) → #6B4E1A (shadow)
+   * SUCCESS ACTIONS:  #6FCF6F → #82E082 (hover) → #4A9C4A (border) → #2D6B2D (shadow)
+   * DANGER ACTIONS:   #E37B6B → #ED9181 (hover) → #B85A4A (border) → #8A3A2A (shadow)
+   * GHOST/NEUTRAL:   transparent → #1E2A38 (hover bg) → #2A3444 (border) → #3A4A5A (hover border)
+   * NAVY:            #1B2430 → #243040 (hover bg) → #2A3444 (border) → #3A4A5A (hover border)
+   *
+   * PORTAL VILLAGE:  #7A3A2A → #B5533C → #D4795E (hover ring + glow)
+   * PORTAL DESERT:   #8A6A20 → #C49030 → #D9A24B (hover ring + glow)
+   * PORTAL FOREST:   #1A3D2A → #2A5E42 → #3D8B5F (hover ring + glow)
+   *
+   * HUD XP:          #E8A93B (distinct from coral/green)
+   * HUD LIVES:       #E37B6B (distinct from amber/green)
+   * HUD LEVEL:       #6FCF6F (distinct from amber/coral)
+   *
+   * STATUS LOCKED:   #2A3444 (muted, non-interactive)
+   * STATUS OPEN:     World-specific glow (amber/terracotta/gold/green)
+   * STATUS COMPLETE: World-specific green (lighter than locked, darker than hover)
+   */
+}
+
+@layer utilities {
+  .font-pixel { font-family: 'Press Start 2P', monospace; }
+  .font-vt { font-family: 'VT323', monospace; }
+  .text-shadow-pixel { text-shadow: 2px 2px 0px #000; }
+}

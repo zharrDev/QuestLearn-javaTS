@@ -1,0 +1,6 @@
+import React from 'react'
+import { Link } from 'react-router-dom'
+import { Button } from '../../components/common/Button'
+import { Map } from 'lucide-react'
+export const NotFoundPage: React.FC = () => (<div className="min-h-[calc(100vh-52px)] flex items-center justify-center p-6 text-center"><div><div className="font-pixel text-[48px] mb-4"><Map size={48} className="inline-block" /></div><h1 className="font-pixel text-[32px] text-pixel-amber text-shadow-pixel">404</h1><p className="font-pixel text-[11px] text-pixel-cream mt-4">HALAMAN TIDAK DITEMUKAN</p><p className="font-vt text-xl text-pixel-cream/40 mt-2">Kamu tersesat di hutan QuestLearn.</p><Link to="/" className="mt-6 inline-block"><Button>KEMBALI</Button></Link></div></div>)
+export const ErrorPage: React.FC<{ code: number; title: string; message: string }> = ({ code, title, message }) => (<div className="min-h-[calc(100vh-52px)] flex items-center justify-center p-6 text-center"><div><h1 className="font-pixel text-[32px] text-pixel-coral text-shadow-pixel">{code}</h1><p className="font-pixel text-[11px] text-pixel-cream mt-4">{title.toUpperCase()}</p><p className="font-vt text-xl text-pixel-cream/40 mt-2">{message}</p><Link to="/" className="mt-6 inline-block"><Button>KEMBALI</Button></Link></div></div>)

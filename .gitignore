@@ -1,0 +1,61 @@
+# ==============================
+# QuestLearn .gitignore
+# ==============================
+
+# ---------- Node / Frontend ----------
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.vite/
+
+# ---------- Java / Maven / Backend ----------
+target/
+*.class
+*.jar
+*.war
+*.log
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Local Maven installation (jangan di-push)
+backend/maven/
+
+# H2 Database files
+*.db
+*.trace.db
+*.mv.db
+*.lock.db
+backend/data/
+
+# ---------- Uploads ----------
+# Simpan folder-nya (.gitkeep), tapi isi-nya di-ignore
+uploads/*
+!uploads/.gitkeep
+
+# ---------- IDE ----------
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+*.swp
+*.swo
+*~
+
+# ---------- OS ----------
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+
+# ---------- Personal Scripts ----------
+# Launcher scripts (.bat / .ps1) — personal, bukan source code
+*.bat
+*.ps1
+!backend/mvnw.cmd
