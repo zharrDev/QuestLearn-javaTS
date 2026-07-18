@@ -12,7 +12,6 @@ export const Navbar: React.FC = () => {
     <nav className="sticky top-0 z-40 bg-pixel-dark border-b-3 border-hud-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-[52px] items-center">
-          {/* Logo */}
           <Link to="/" className="flex items-center gap-3">
             <div className="w-8 h-8 bg-pixel-amber border-2 border-[#B8842A] shadow-pixel-sm flex items-center justify-center">
               <span className="font-pixel text-[10px] text-pixel-navy">Q</span>
@@ -22,11 +21,9 @@ export const Navbar: React.FC = () => {
             </span>
           </Link>
 
-          {/* Nav items */}
           <div className="flex items-center gap-1.5">
             {isAuthenticated ? (
               <>
-                {/* XP & Streak badges */}
                 <div className="hidden sm:flex items-center gap-2 mr-1">
                   <div className="hud-item hud-xp text-[8px]">
                     <Zap size={10} />
@@ -38,7 +35,6 @@ export const Navbar: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Navigation links */}
                 <Link
                   to="/dashboard"
                   className="px-3 py-1.5 font-pixel text-[8px] text-pixel-cream/70 hover:text-pixel-cream hover:bg-pixel-panel-light transition"
@@ -46,16 +42,10 @@ export const Navbar: React.FC = () => {
                   Dashboard
                 </Link>
                 <Link
-                  to="/rpg"
-                  className="px-3 py-1.5 font-pixel text-[8px] text-pixel-amber hover:bg-pixel-amber/10 transition"
+                  to="/typing"
+                  className="px-3 py-1.5 font-pixel text-[8px] text-green-400 hover:bg-green-400/10 transition"
                 >
-                  RPG
-                </Link>
-                <Link
-                  to="/worldmap"
-                  className="px-3 py-1.5 font-pixel text-[8px] text-pixel-cream/70 hover:text-pixel-cream hover:bg-pixel-panel-light transition"
-                >
-                  Dunia
+                  ⚔️ Typing
                 </Link>
                 <Link
                   to="/leaderboard"
@@ -72,10 +62,8 @@ export const Navbar: React.FC = () => {
                   </Link>
                 )}
 
-                {/* Separator */}
                 <div className="w-px h-5 bg-pixel-cream/15 mx-1" />
 
-                {/* Profile avatar */}
                 <Link
                   to="/profile"
                   className="w-7 h-7 bg-pixel-green border-2 border-[#4A9C4A] shadow-pixel-sm flex items-center justify-center font-pixel text-[7px] text-pixel-navy hover:bg-pixel-green/80 transition"
@@ -83,7 +71,6 @@ export const Navbar: React.FC = () => {
                   {user?.nama?.[0]?.toUpperCase()}
                 </Link>
 
-                {/* Logout */}
                 <button
                   onClick={() => {
                     logout()

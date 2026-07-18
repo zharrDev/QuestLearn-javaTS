@@ -108,7 +108,13 @@ public class DataSeeder implements CommandLineRunner {
                 Badge.builder().nama("Penjelajah Dunia").kode("LEVEL_10").deskripsi("Selesaikan 10 level").warna("#D97757").syaratType("LEVEL_COMPLETE").syaratValue(10).xpBonus(60).build(),
                 Badge.builder().nama("Nilai Sempurna").kode("PERFECT").deskripsi("Dapatkan 100% di satu level").warna("#E8A93B").syaratType("PERFECT_SCORE").syaratValue(1).xpBonus(50).build(),
                 Badge.builder().nama("Polyglot Pemula").kode("ENG_MASTER").deskripsi("Selesaikan semua level Bahasa Inggris").warna("#D97757").syaratType("LEVEL_COMPLETE").syaratValue(6).xpBonus(100).build(),
-                Badge.builder().nama("Ahli Logika").kode("LOGIC_MASTER").deskripsi("Selesaikan dunia Logika").warna("#E8A93B").syaratType("LEVEL_COMPLETE").syaratValue(18).xpBonus(150).build()
+                Badge.builder().nama("Ahli Logika").kode("LOGIC_MASTER").deskripsi("Selesaikan dunia Logika").warna("#E8A93B").syaratType("LEVEL_COMPLETE").syaratValue(18).xpBonus(150).build(),
+                // Typing badges
+                Badge.builder().nama("Jago Ngetik Pemula").kode("WPM_20").deskripsi("Raih 20 WPM di sesi typing").warna("#7A9B76").syaratType("WPM").syaratValue(20).xpBonus(20).build(),
+                Badge.builder().nama("Jago Ngetik Menengah").kode("WPM_40").deskripsi("Raih 40 WPM di sesi typing").warna("#E8A93B").syaratType("WPM").syaratValue(40).xpBonus(30).build(),
+                Badge.builder().nama("Master Typist").kode("WPM_60").deskripsi("Raih 60 WPM di sesi typing").warna("#D97757").syaratType("WPM").syaratValue(60).xpBonus(50).build(),
+                Badge.builder().nama("Akurat Banget").kode("ACC_95").deskripsi("Akurasi 95% dalam satu sesi typing").warna("#2C5F5D").syaratType("ACCURACY").syaratValue(95).xpBonus(30).build(),
+                Badge.builder().nama("Pembantai Musuh").kode("KILL_100").deskripsi("Kalahkan 100 musuh total di typing mode").warna("#E8A93B").syaratType("TYPING_KILLS").syaratValue(100).xpBonus(40).build()
         );
         for (Badge b : badges) badgeRepository.save(b);
 

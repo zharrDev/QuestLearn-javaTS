@@ -24,6 +24,7 @@ public class BadgeServiceImpl implements BadgeService {
     @Autowired UserBadgeRepository userBadgeRepository;
     @Autowired UserRepository userRepository;
     @Autowired ProgressUserRepository progressRepository;
+    @Autowired TypingSessionRepository typingSessionRepository;
 
     @Override
     public PaginatedResponse<BadgeResponse> getAll(String search, Pageable pageable) {
@@ -112,6 +113,18 @@ public class BadgeServiceImpl implements BadgeService {
                     break;
                 case "PERFECT_SCORE":
                     if (lulus.stream().anyMatch(p->p.getSkor()!=null && p.getSkor()==100)) unlock = true;
+                    break;
+                case "WPM":
+                    if (typingSessionRepository.findBestWpmByUserId(userId).orElse(0.0) >= val) unlock = true;
+                    break;
+                case "ACCURACY":
+                    if (typingSessionRepository.findBestAkurasiByUserId(userId).orElse(0.0) >= val) unlock = true;
+                    break;
+                case "TYPING_KILLS":
+                    int totalKills = typingSessionRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                            .mapToInt(s -> s.getTotalMusuhKalah() != null ? s.getTotalMusuhKalah() : 0)
+                            .sum();
+                    if (totalKills >= val) unlock = true;
                     break;
                 default:
                     break;

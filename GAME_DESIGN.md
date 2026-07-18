@@ -1,249 +1,113 @@
-# QuestLearn — Game Design Document (Pixel Art)
+# QuestLearn: Typing Strike — Game Design Redesign
 
-> Dokumen ini fokus khusus ke sisi **game/visual** — peta level, karakter, HUD, dan mekanisme interaksi. Untuk arsitektur sistem, entitas database, dan endpoint, lihat `PROJECT_DESIGN.md`. Semua deskripsi di bawah disesuaikan persis dengan 4 aset yang sudah dibuat.
-
----
-
-## 1. Inventaris Aset
-
-| File | Dunia | Deskripsi Visual Asli |
-|---|---|---|
-| `bg-english-village.png` | Bahasa Inggris | Desa Inggris siang hari — rumah beratap jerami & batu, bendera Union Jack & St. George, papan toko "BOOKS", papan "WELCOME TO LITTLEWOOD", bangku taman, kotak bunga, pohon birch, ladang hijau, gereja kecil di kejauhan |
-| `bg-math-desert.png` | Matematika Dasar | Gurun gaya platformer — HUD di pojok atas (SCORE/LIVES/LEVEL), karakter penjelajah (topi & tas) sedang berlari-lompat, piramida bertuliskan rumus (`2x+10=24`, `y=mx+b`, `πr²=A`, `∫(3x²)dx`), kaktus dihiasi angka, koin, obor, matahari terbenam |
-| `bg-logic-forest.png` | Logika & Pengetahuan Umum | Hutan malam misterius — bulan sabit, kunang-kunang, lentera menyala tergantung di pohon, potongan puzzle rune bercahaya (emas/oranye) berserakan di tanah, tanda tanya bercahaya melayang, reruntuhan pilar batu, nisan tua |
-| `wizard-pixel.png` | Global (avatar) | Karakter wizard kecil berjubah ungu dengan tongkat emas, gaya chibi/pixel, latar transparan — dipakai sebagai avatar utama user |
-
-**Catatan penting:** background Desert sudah punya karakter "penjelajah" bawaan di dalam gambarnya sendiri (bukan wizard). Untuk konsistensi, **wizard tetap jadi avatar resmi user di semua dunia** — karakter penjelajah di background Desert diperlakukan sebagai elemen dekoratif scene saja (seperti NPC latar), bukan avatar yang dikontrol.
+> Redesign dari RPG quiz-based menjadi **3D typing combat game** untuk melatih kecepatan & akurasi mengetik. Dokumen ini menggantikan mekanisme gameplay inti di `GAME_DESIGN.md`, tapi tetap mewarisi tema 3 Dunia, karakter wizard, dan struktur progres yang sudah ada.
 
 ---
 
-## 2. Homepage — Auto Slideshow Background
+## 1. Konsep Inti
 
-Halaman pertama yang dilihat user (landing/home sebelum atau sesudah login) — background-nya **otomatis bergonta-ganti** (cross-fade) menampilkan ketiga scene dunia secara bergiliran: Village → Desert → Forest → kembali ke Village, dan seterusnya. Ini murni ambiance/showcase, bukan halaman pemilihan dunia yang interaktif (pemilihan dunia tetap ada di halaman/section tersendiri setelah ini, misalnya di Dashboard).
+Karakter wizard user berdiri di sebuah arena 3D. Dari berbagai arah, **musuh muncul membawa kata/kalimat melayang di atas kepala mereka**. User harus mengetik kata itu — huruf demi huruf — sebelum musuh mencapai karakter. Setiap huruf benar memicu **animasi tebasan pedang**; kata yang selesai diketik = musuh tertebas habis dan hancur.
 
-**Konsep:**
-- 3 gambar (`bg-english-village.png`, `bg-math-desert.png`, `bg-logic-forest.png`) ditumpuk sebagai layer, masing-masing tampil penuh 1 layar secara bergantian dengan **transisi cross-fade** (fade out gambar sekarang, fade in gambar berikutnya), bukan potongan/dipilih user
-- Durasi tiap slide sekitar 4–5 detik sebelum pindah ke slide berikutnya, siklus berulang otomatis selama user berada di halaman ini
-- Konten di atas background (judul "QuestLearn", tagline singkat, tombol CTA "Mulai Petualangan"/"Masuk") **tetap diam/statis** — tidak ikut berubah, hanya background di belakangnya yang hidup
-- Overlay gradient gelap tipis di atas background (dari transparan di atas ke lebih gelap di bawah) supaya teks & tombol tetap terbaca jelas di atas gambar apa pun yang sedang tampil
-- Indikator titik kecil (dot) di bagian bawah menandakan slide mana yang sedang aktif, sinkron dengan siklus otomatis
-
-**Kenapa ini pas dijadikan kesan pertama:** user langsung "diperkenalkan" ke ketiga dunia sekaligus sebelum masuk ke salah satunya — memberi preview variasi konten tanpa harus klik apa pun, dan menegaskan identitas visual pixel art QuestLearn sejak detik pertama.
-
-**Implementasi teknis:** 3 elemen `<img>` (atau `background-image` div) ditumpuk absolute dalam 1 container, masing-masing diberi CSS `@keyframes` opacity dengan `animation-delay` bertingkat (mis. slide 1 mulai di 0s, slide 2 di 4s, slide 3 di 8s, siklus total 12s lalu berulang) — murni CSS, tidak butuh JavaScript carousel library.
-
-**Prototype referensi:** `homepage_slideshow_prototype.html` (bisa dibuka langsung di browser untuk melihat efeknya berjalan).
+Ini murni game latihan mengetik cepat (typing speed trainer), dibungkus combat RPG 3D supaya terasa seru, bukan latihan ngetik yang membosankan.
 
 ---
 
-## 3. Breakdown per Dunia
+## 2. Mekanik Inti (Core Gameplay Loop)
 
-### 🏘️ Bahasa Inggris — "Littlewood Village"
+### 2.1 Spawn Musuh
+- Musuh muncul dari beberapa arah sekaligus (depan, kiri, kanan — bisa juga dari belakang di level susah), masing-masing membawa **kata/kalimat berbeda** melayang di atasnya.
+- Musuh bergerak mendekat ke karakter secara perlahan namun pasti. Semakin lama tidak diketik, semakin dekat — kalau sampai nyentuh karakter, karakter kena damage dan musuh itu hilang (dianggap "lolos").
 
-**Mood:** hangat, cerah, tenang — cocok untuk belajar percakapan & kosakata sehari-hari.
+### 2.2 Sistem Targeting (Lock-on by First Letter)
+Karena banyak musuh muncul bersamaan, dipakai mekanik **lock-on otomatis via huruf pertama**:
+- User mengetik huruf pertama → sistem mencari musuh yang katanya diawali huruf tersebut → musuh itu jadi **target aktif** (ditandai visual: outline menyala / warna beda).
+- Kalau ada 2+ musuh dengan huruf awal sama → yang **paling dekat ke karakter** yang otomatis terpilih.
+- Setelah target terkunci, semua ketikan berikutnya diarahkan ke kata musuh itu saja, sampai kata selesai atau target hancur/lolos.
+- User bisa "batal lock" secara implisit kalau dia mulai ngetik huruf yang cocok sama musuh lain yang lebih mendesak — tapi progress di kata sebelumnya hilang (musuh lama tetap jalan mendekat).
 
-**Elemen visual yang sudah ada & fungsinya:**
-- Papan toko **"BOOKS"** → jadi penanda alami lokasi Level Vocabulary/Grammar
-- Papan **"WELCOME TO LITTLEWOOD"** → titik masuk/start scene, cocok jadi "gerbang" awal peta
-- Rumah-rumah berjejer → tiap rumah bisa jadi 1 titik level (6 rumah = 6 level)
-- Bangku taman & kotak bunga → titik "istirahat" visual antar level, tidak fungsional, murni dekorasi jalur
-- Bendera (Union Jack/St. George) → aksen dekoratif konsisten dengan tema Inggris
+### 2.3 Input Salah
+- Kalau user salah ketik huruf berikutnya dari kata yang sedang dikunci:
+  - **Huruf yang salah ditolak** — kursor/highlight tidak maju, huruf yang seharusnya diketik **berkedip/menyala merah** sebagai indikator.
+  - Karakter TIDAK menebas (animasi diam / pose "block/parry" singkat) sampai user mengetik huruf yang benar.
+  - Musuh tetap terus bergerak mendekat selama user salah ketik — jadi ada tekanan waktu real, bukan cuma tekanan akurasi.
+- Ini dicatat sebagai bagian dari perhitungan **akurasi** (bukan sekadar lolos/gagal), dipakai buat statistik akhir sesi.
 
-**Penempatan node level (mengikuti tata letak asli gambar):**
-1. Depan rumah pertama kiri (dekat gerbang start)
-2. Depan toko buku "BOOKS"
-3. Depan rumah tengah (rumah batu dengan bendera)
-4. Depan rumah kanan
-5. Di dekat gereja kecil di kejauhan (level 5, mulai terlihat di ujung jalan)
-6. Titik akhir jalan / balik ke pusat desa (level "boss")
+### 2.4 Efek Visual per Huruf & per Kata
+- Tiap huruf benar → tebasan pedang kecil (slash particle + sedikit gerakan pedang), huruf di teks musuh berubah warna (misal abu → hijau/emas) menandakan sudah "ditebas".
+- Kata selesai → tebasan besar/final slash, musuh pecah jadi partikel/hancur, +skor & +XP muncul sebagai floating text.
+- Musuh yang lolos (nyentuh karakter) → efek hit ke karakter, health bar berkurang, sedikit screen shake.
 
-**Mekanisme quest:** *"Talk to the Villager"* — dialog NPC penduduk desa lewat speech bubble pixel-art. NPC bisa ditempatkan berdiri di depan tiap rumah (aset tambahan yang perlu dibuat: 2-3 sprite penduduk sederhana). Format soal: pilihan dialog, atau drag kata ke kalimat rumpang untuk grammar.
+### 2.5 Karakter Aktif Bergerak — Bukan Diam di Tempat
+Karakter **tidak berdiri statis**. Selama sesi berjalan, dia terus bergerak dinamis di arena — lari, lompat, berpindah posisi mendekat/menghindar dari musuh — dan gerakan pedangnya menyatu dengan pergerakan itu, bukan animasi tebas yang terpisah dari gerak badan. Detailnya:
 
----
+- **Saat target terkunci (lock-on)**: karakter otomatis lari/dash ke arah musuh yang jadi target, sambil bersiap posisi menebas (pedang terangkat).
+- **Tiap huruf benar diketik**: satu gerakan tebas (slash) tereksekusi di tengah animasi lari — misal tebas horizontal saat lari mendekat, atau tebas ke atas kalau kebetulan lagi di fase lompat. Jadi ritme tebasan menyatu dengan ritme lari, bukan berhenti dulu baru nebas.
+- **Musuh yang posisinya agak jauh/di sisi berbeda**: karakter bisa **lompat** buat mencapai musuh itu, terutama di level Hard saat musuh muncul dari banyak arah sekaligus — memberi kesan combat yang lincah, bukan sekadar tebas di tempat.
+- **Kata selesai (musuh hancur)**: gerakan finishing move — tebasan besar disertai sedikit gerakan mundur/berputar (recovery pose) sebelum lari lagi ke target berikutnya.
+- **Idle di antara target** (belum ada huruf diketik / menunggu musuh mendekat cukup jauh untuk di-lock): karakter tetap bergerak — jalan santai/waspada di area tengah arena — supaya scene tidak terasa beku.
+- **Kalau salah ketik**: karakter berhenti sejenak di posisi terakhirnya dengan pose "block/parry" (bukan mundur total), lalu lanjut lari-nebas begitu huruf yang benar diketik.
 
-### 🏜️ Matematika Dasar — "Pyramid Run"
+Secara teknis, ini berarti animasi karakter butuh beberapa **state/clip** yang saling menyambung: `idle`, `run`, `jump`, `slash` (beberapa varian arah), `block`, dan `finisher` — dikontrol lewat state machine sederhana di kode (state berubah berdasarkan event: huruf benar, huruf salah, kata selesai, jarak ke target). Kalau pakai pendekatan sprite billboard 2D (lihat bagian 5), ini bisa berupa **sprite sheet animasi** per state (mirip animasi sprite platformer biasa) yang ditempel di objek 3D, jauh lebih ringan diproduksi daripada rigging animasi 3D penuh.
 
-**Mood:** energik, adventure — cocok dengan gaya "lari-lompat" yang memang sudah tergambar di asetnya.
-
-**Elemen visual yang sudah ada & fungsinya:**
-- **Piramida bertuliskan rumus** (`2x+10=24`, `y=mx+b`, `πr²=A`, `∫(3x²)dx`) → tiap piramida bisa jadi penanda tema level (aljabar, geometri, kalkulus dasar dst.) — cocok banget dipakai literal sebagai "gerbang" level
-- **Kaktus berhias angka** → dekorasi ambient, bisa dianimasikan sedikit (goyang pelan) di area gurun terbuka
-- **HUD bawaan gambar** (SCORE/LIVES/LEVEL) → dipakai **persis** sebagai pola HUD resmi QuestLearn di seluruh dunia (lihat Bagian 4)
-- **Koin & obor** → koin dipakai sebagai representasi visual XP di scene, obor sebagai penanda titik level yang sudah menyala (selesai)
-
-**Penempatan node level:**
-1. Titik awal dekat kaktus kiri (dataran rendah)
-2. Platform batu kecil (sesuai balok di gambar)
-3. Depan piramida pertama (`2x+10=24` — Aljabar Sederhana)
-4. Antara dua piramida (`πr²=A` — Bangun Datar)
-5. Depan piramida besar kanan (`∫(3x²)dx` — dijadikan tantangan "bonus" visual meski materi tetap level dasar, jangan sampai soal beneran kalkulus di luar scope Matematika Dasar)
-6. Puncak/ujung kanan scene, dekat koin besar bersinar (level "boss")
-
-**Mekanisme quest:** *"Catch the Right Number"* — angka-angka jawaban melayang di scene mengikuti gaya angka/simbol yang sudah ada di background (`4`, `7`, `π`, `√`, dll — bisa dipakai ulang gaya font pixel yang sama). User klik angka benar sebelum waktu habis.
+### 2.5 Kondisi Game Over / Selesai Sesi
+- Sesi berupa **wave/gelombang** dengan durasi tertentu (misal 60–90 detik) atau target jumlah musuh dikalahkan.
+- Game over kalau health karakter habis (terlalu banyak musuh lolos).
+- Di akhir sesi, tampil ringkasan: **WPM (kata per menit), Akurasi %, Combo terpanjang, Skor, Musuh dikalahkan**.
 
 ---
 
-### 🌲 Logika & Pengetahuan Umum — "Whispering Woods"
+## 3. Tingkat Kesulitan (Easy → Hard, dipilih bebas oleh user)
 
-**Mood:** misterius, tenang, sedikit menegangkan (dalam artian menyenangkan) — cocok untuk teka-teki yang butuh fokus.
+| Level | Panjang Kata | Kecepatan Musuh Mendekat | Jumlah Musuh Bersamaan | Karakter Spesial |
+|---|---|---|---|---|
+| **Easy** | 3–5 huruf, kata umum | Lambat | 1 musuh dulu, lalu maks 2 | Semua huruf kecil, tanpa tanda baca |
+| **Medium** | 5–8 huruf / frasa pendek | Sedang | 2–3 musuh | Ada huruf kapital di awal kalimat |
+| **Hard** | Frasa/kalimat pendek (2–5 kata) | Cepat | 3+ musuh, spawn dari segala arah | Tanda baca, angka, kombinasi huruf kapital-kecil |
 
-**Elemen visual yang sudah ada & fungsinya:**
-- **Lentera tergantung di pohon** (menyala dengan efek glow) → **persis** dipakai sebagai penanda titik level — lentera padam = level terkunci, lentera menyala redup = level terbuka, lentera menyala terang = level selesai
-- **Potongan puzzle rune bercahaya** yang sudah tersebar di gambar (2 potongan besar + beberapa balok kecil berukir huruf rune) → ini **aset kunci** untuk mekanisme drag-puzzle, bisa langsung dipakai/diadaptasi sebagai sprite potongan puzzle yang di-drag user
-- **Tanda tanya bercahaya melayang** (5 buah di gambar) → representasi visual "misteri belum terpecahkan", cocok dipasang tepat di atas node level yang belum dikunjungi
-- **Reruntuhan pilar & nisan tua** → dekorasi ambient menambah kesan "hutan kuno"
-
-**Penempatan node level (mengikuti posisi lentera & tanda tanya di gambar):**
-1. Lentera kiri (dekat balok rune pertama)
-2. Lentera kedua dari kiri (dekat potongan puzzle besar berbentuk L)
-3. Titik tengah scene (dekat pilar reruntuhan & sungai kecil bercahaya di background)
-4. Lentera kanan-tengah (dekat potongan puzzle kotak-kotak)
-5. Lentera paling kanan
-6. Titik terjauh kanan, dekat balok rune terakhir bertuliskan "K"/"R" (level "boss")
-
-**Mekanisme quest:** *"Rune Puzzle Matching"* — user drag potongan rune (memakai bentuk & gaya emas/oranye yang identik dengan aset asli) ke slot yang tepat untuk pola/urutan. Untuk soal pengetahuan umum non-visual, tetap pilihan ganda tapi dibingkai panel bergaya rune/batu.
+- **User bebas pilih dunia + level kesulitan sendiri** (tidak dipaksa gating linear seperti sistem lama) — cocok untuk latihan ngetik karena setiap orang punya kecepatan awal beda.
+- Opsional (rekomendasi): tetap simpan **statistik terbaik per kombinasi Dunia+Level** (WPM tertinggi, akurasi tertinggi) untuk leaderboard & badge, walau tidak ada gating wajib.
 
 ---
 
-## 4. Karakter & Avatar
+## 4. Konten Kata per Dunia (Word Bank Baru Khusus Typing)
 
-**Wizard** adalah avatar tunggal & konsisten di seluruh aplikasi:
-- **Peta Level:** wizard berdiri/berlari di titik level aktif, animasi lari sederhana (2-4 frame) + efek "lompat kecil" saat berpindah titik
-- **Profil User:** potret wizard jadi foto profil default
-- **Dialog (Village):** wizard muncul sebagai "sisi kiri" percakapan, NPC penduduk di "sisi kanan"
-- **Progress/Badge:** wizard jadi elemen sentral di halaman pencapaian (mis. wizard "naik level" visual — tongkatnya bisa berubah warna/efek seiring makin banyak badge, sebagai nilai tambah opsional)
+Sesuai arahan: **bukan lagi soal edukasi kuis**, tapi bank kata/kalimat yang temanya tetap mengikuti nuansa tiap dunia, supaya beda dunia terasa beda vibe-nya:
 
-**Status ekspresif wizard (dibuat dari 1 sprite dasar via variasi sederhana, bukan menggambar ulang total):**
-- Normal (dasar, sudah ada)
-- Senang (jawaban benar) — bisa cukup ditambah efek sparkle/bintang kecil di sekitar sprite tanpa redraw
-- Berpikir (saat quest dibuka) — bisa pakai crop/posisi sprite yang sama dengan ikon "?" kecil di sampingnya
+| Dunia | Tema Kata | Contoh Easy | Contoh Medium | Contoh Hard |
+|---|---|---|---|---|
+| **Desa Bahasa Inggris** 🇬🇧 | Kata & frasa Inggris umum | `book`, `home`, `light` | `sunrise`, `village life` | `The quiet village woke up.` |
+| **Gurun Matematika** 🔢 | Angka, simbol, istilah numerik ditulis | `zero`, `plus`, `12+7` | `y = mx + b` | `2x + 10 = 24, solve for x` |
+| **Hutan Logika** 🧠 | Kata teka-teki, istilah logika | `maze`, `rune`, `owl` | `deduce the pattern` | `If A then B, not B, so...` |
 
----
-
-## 5. Sistem HUD
-
-Mengikuti pola yang **sudah ada persis** di aset `bg-math-desert.png` — dijadikan standar HUD global:
-
-```
-[Pojok kiri atas]                              [Pojok kanan atas]
-SCORE: 001250                                          LEVEL 3
-LIVES: 3 ♥
-[Nama Dunia]
-```
-
-**Adaptasi untuk QuestLearn:**
-- `SCORE` → diganti `XP` (ikon koin pixel di sebelah angka)
-- `LIVES` → jumlah percobaan tersisa dalam satu sesi quest (ikon hati pixel, direset tiap masuk level baru — bukan nyawa permanen)
-- Baris ketiga → nama Dunia aktif (mis. "MATEMATIKA DASAR", "BAHASA INGGRIS", "LOGIKA & UMUM")
-- `LEVEL` pojok kanan → nomor level yang sedang dikerjakan
-
-**Styling:** font pixel (Press Start 2P) untuk angka & label, kotak HUD semi-transparan gelap (`#1B2430` dengan opacity ~85%) menempel di pojok, konsisten di semua 3 scene dunia.
+- Word bank ini **disimpan terpisah dari tabel `Soal` lama** (yang berbasis pilihan ganda) — dibuat entitas baru, misal `TypingWord` (id, dunia_id, teks, level_kesulitan).
+- **Anti-repetisi tetap dipertahankan** dari sistem lama: kata yang baru saja muncul dalam satu sesi tidak boleh muncul lagi sampai pool kata habis diputar / di-shuffle ulang. Generator otomatis (mirip `questionGenerator.ts` lama) bisa dipakai untuk kombinasi angka/frasa acak di dunia Matematika & Logika supaya variasinya nyaris tak terbatas.
 
 ---
 
-## 6. Kebutuhan Aset Tambahan
+## 5. Visual 3D — Pendekatan yang Realistis untuk Solo Dev
 
-Aset yang sudah ada cukup untuk background & avatar utama. Berikut aset tambahan yang perlu diproduksi menyusul (prioritas dari yang paling penting):
+Full 3D modeling (karakter, musuh, environment low-poly penuh) itu scope besar. Rekomendasi pendekatan **"3D space + billboard sprite"** (dipakai banyak game indie, terasa 3D tapi produksi asetnya ringan):
 
-| Aset | Prioritas | Catatan |
-|---|---|---|
-| Ikon gembok pixel (level terkunci) | Tinggi | Dipakai di semua 3 dunia, satu desain generik cukup |
-| Ikon bintang/api unggun kecil (level selesai) | Tinggi | Bisa beda gaya per dunia (bintang di Forest, bendera kecil di Village, kristal/koin di Desert) |
-| 2-3 sprite NPC penduduk (Village) | Sedang | Untuk mekanisme dialog |
-| Sprite angka/simbol lepas bergaya sama dengan di background Desert | Sedang | Untuk mekanisme "Catch the Right Number" |
-| Potongan puzzle rune tambahan (variasi bentuk) | Sedang | Untuk variasi soal di Forest, gaya ikuti yang sudah ada di background |
-| Frame animasi lari wizard (2-4 frame tambahan) | Rendah (nilai tambah) | Sprite tunggal saat ini sudah cukup untuk MVP, animasi lari bisa disimulasikan dengan pergeseran posisi CSS dulu |
-| Ikon pixel untuk badge/achievement | Rendah | Bisa pakai ikon generik dulu (medali/perisai sederhana) |
+- **Arena/environment**: 3D sederhana (ground plane, langit, beberapa objek 3D dasar seperti batu/pohon/pilar) bertema sesuai dunia (Village/Desert/Forest), background bisa reuse aset pixel art yang sudah ada (`bg-english-village.png`, dst) sebagai skybox/backdrop.
+- **Karakter & musuh**: sprite 2D pixel art (wizard yang sudah ada) di-*billboard* (selalu menghadap kamera) di dalam ruang 3D — jadi tetap terasa 3D karena kedalaman & pergerakan musuh dari berbagai sisi, tapi produksi asetnya tetap 2D sprite yang sudah kamu punya.
+- **Kata mengambang**: teks di-render sebagai HTML overlay yang posisinya di-proyeksikan dari koordinat 3D musuh (teknik umum di react-three-fiber pakai `Html` dari drei), supaya teks tetap tajam & mudah styling (warna per huruf, efek highlight).
+- **Kamera**: third-person, sedikit di atas & belakang karakter, arena melengkung/setengah lingkaran di depan supaya musuh dari kiri-kanan-depan kelihatan jelas.
 
----
-
-## 7. Catatan Teknis Implementasi
-
-- Semua background di-render dengan `image-rendering: pixelated` agar tetap tajam saat di-scale ke lebar layar berbeda
-- Ukuran asli background (1376×768) cukup untuk desktop; untuk mobile, scene di-crop/pan otomatis mengikuti posisi node aktif, bukan di-scale penuh (supaya detail pixel tidak terlalu kecil)
-- Wizard sprite (1024×1024 asli) perlu di-resize ke ~thumbnail konsisten (mis. 64×64 atau 96×96) untuk pemakaian di peta level, dan ukuran lebih kecil lagi (32×32) untuk ikon di navbar/profil
-- Font pixel (Press Start 2P) hanya untuk HUD & label pendek — body soal & pembahasan tetap sans-serif biasa demi keterbacaan (lihat `PROJECT_DESIGN.md` bagian tipografi)
-- Struktur folder aset yang disarankan:
-
-```
-frontend/public/assets/
-├── backgrounds/
-│   ├── village.png
-│   ├── desert.png
-│   └── forest.png
-├── characters/
-│   ├── wizard-idle.png
-│   ├── wizard-happy.png       # nilai tambah
-│   └── npc-villager-*.png     # untuk dialog Village
-├── icons/
-│   ├── lock.png
-│   ├── star-forest.png
-│   ├── flag-village.png
-│   ├── crystal-desert.png
-│   └── hud/
-│       ├── xp-coin.png
-│       └── heart.png
-└── puzzle/
-    └── rune-piece-*.png       # untuk mekanisme Forest
-```
+**Stack teknis yang disarankan** (tetap dalam ekosistem React yang sudah dipakai):
+- `three` + `@react-three/fiber` + `@react-three/drei` untuk scene 3D di React
+- State ketikan & logic lock-on di-handle di React state (bukan di dalam Three.js scene graph) supaya gampang di-debug
 
 ---
 
-## 8. Animasi Traversal: Lari, Lompat & Mendarat
+## 6. Dampak ke Sistem yang Sudah Ada
 
-Karakter wizard yang ada saat ini cuma **1 sprite statis** — bukan sprite sheet beranimasi. Berikut cara bikin traversal tetap kelihatan "hidup" tanpa harus gambar ulang banyak frame dulu.
-
-### Tingkatan implementasi
-
-**Tingkat 1 — MVP (pakai 1 sprite, murni CSS/JS, tanpa aset tambahan)**
-
-Ilusi gerakan dibangun dari kombinasi transform, bukan pergantian gambar:
-
-| Fase | Efek CSS |
+| Sistem Lama | Perubahan |
 |---|---|
-| **Lari** (geser horizontal antar node) | `translateX` dengan easing `linear`/`ease-in-out`, durasi proporsional ke jarak antar node |
-| **Bobbing saat lari** | `translateY` naik-turun kecil berulang (mis. ±4px, siklus 200ms) mensimulasikan langkah kaki, dikombinasikan bareng translateX |
-| **Lompat** (di titik tertentu, khusus Desert) | Lintasan parabola: `translateY` naik lalu turun mengikuti kurva (bisa pakai `cubic-bezier` custom atau keyframe manual persentase 0%→50%→100%) |
-| **Squash saat mendarat** | Sesaat sprite di-`scaleY(0.85) scaleX(1.1)` lalu balik ke normal (100–150ms) — efek klasik platformer biar mendarat kerasa "berbobot" |
-| **Hadap arah** | `scaleX(-1)` saat gerak ke kiri (flip horizontal), normal saat ke kanan |
-| **Debu mendarat (opsional)** | Lingkaran kecil semi-transparan yang muncul sebentar di bawah kaki lalu fade-out & membesar dikit, dipicu tepat saat squash terjadi |
-
-Semua ini bisa dibikin pakai CSS `@keyframes` atau library ringan (Framer Motion untuk React) — **tidak butuh sprite sheet maupun game engine**, cukup 1 gambar wizard yang sudah ada.
-
-**Tingkat 2 — Nilai tambah (kalau ada waktu produksi aset tambahan)**
-
-Sprite sheet run-cycle 4–6 frame + jump-cycle 2–3 frame, ditukar via `steps()` di CSS animation atau interval JS — hasilnya kaki/jubah wizard beneran "bergerak", bukan cuma sprite tunggal yang digeser. Ini murni polesan, bisa dikerjakan belakangan setelah sistem utama selesai.
-
-### Variasi per Dunia (menyesuaikan mood scene masing-masing)
-
-| Dunia | Gaya Gerak |
-|---|---|
-| **Desert** | Lompatan jelas & agak besar antar platform batu (sesuai gaya platformer di background aslinya), landing squash lebih ditonjolkan |
-| **Village** | Jalan santai, bobbing halus, **tanpa lompat** (jalan menyusuri jalan desa yang rata) |
-| **Forest** | Gerak sedikit "melayang"/mengambang (bobbing lebih lembut & lambat), disinkronkan dengan kedipan cahaya lentera di sekitar jalur — memperkuat kesan misterius |
-
-### Urutan lengkap 1 siklus traversal
-
-1. User klik node level berikutnya
-2. Wizard mulai **lari** (translateX + bobbing) menuju titik tujuan
-3. *(Khusus Desert)* di titik tertentu sepanjang jalur, trigger **lompat** (parabola singkat) melewati "gap" platform
-4. Sesampainya di node → **squash mendarat** singkat + opsional debu
-5. Sprite kembali ke pose normal (idle), diam di node baru
-6. Modal quest muncul menutupi sebagian scene
-
-**Catatan performa:** karena semua efek ini transform-based (bukan reflow layout), animasinya tetap ringan bahkan di HP — aman dipakai meski cuma dikerjakan sendirian dengan waktu terbatas.
+| `Soal` (soal pilihan ganda) | Tetap ada di DB untuk histori/kompatibilitas, tapi **tidak dipakai lagi** di gameplay utama. Diganti `TypingWord`. |
+| Quest gating 70% | Diganti jadi **statistik personal best** (WPM & akurasi) per Dunia+Level, tanpa gating linear wajib — user bebas pilih level. |
+| Battle Quiz Modal (musuh → soal modal) | Diganti total oleh mekanik lock-on & ngetik langsung di scene 3D, tidak ada modal terpisah lagi. |
+| XP & Badge | Tetap dipakai, tapi trigger-nya diubah: XP dari musuh dikalahkan, badge baru seperti "WPM pertama tembus 40", "Akurasi 100% dalam 1 sesi", "Kalahkan 50 musuh". |
+| Leaderboard | Tetap ada, tapi metrik diganti jadi WPM tertinggi / kombinasi WPM+akurasi, bisa difilter per Dunia. |
+| Mode Top-Down & Side-Scroller lama | Bisa dipensiunkan atau dijadikan "hub/lobi" saja untuk pilih dunia & level sebelum masuk ke arena 3D typing. |
 
 ---
-
-## 9. Ringkasan Keterkaitan Visual ↔ Gameplay
-
-| Elemen di Gambar Asli | Fungsi Gameplay |
-|---|---|
-| Papan "BOOKS" (Village) | Penanda level vocabulary/grammar |
-| Piramida + rumus (Desert) | Penanda tema level matematika, "gerbang" visual antar level |
-| Lentera menyala (Forest) | Status node level (padam/redup/terang = terkunci/terbuka/selesai) |
-| Potongan puzzle rune (Forest) | Aset langsung untuk mekanisme drag-puzzle |
-| Tanda tanya bercahaya (Forest) | Indikator visual "belum dikerjakan" di atas node |
-| HUD SCORE/LIVES/LEVEL (Desert) | Diadopsi jadi standar HUD global seluruh aplikasi |
-| Koin & obor (Desert) | Representasi XP & status level selesai |
-| Wizard berjubah ungu | Avatar tunggal user di seluruh aplikasi |
