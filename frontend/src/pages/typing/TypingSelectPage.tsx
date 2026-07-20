@@ -69,7 +69,7 @@ export default function TypingSelectPage() {
           <h1 className="text-4xl text-green-400 mb-2 flex items-center justify-center gap-3">
             <Swords size={32} className="text-green-400" /> Typing Strike
           </h1>
-          <p className="text-gray-400">Latihan mengetik dengan gaya combat 3D</p>
+          <p className="text-gray-400">Side-scroller 2D — ketik cepat, tebas kotak huruf!</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 mb-8">

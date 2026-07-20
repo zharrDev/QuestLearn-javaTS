@@ -12,6 +12,10 @@ import {
   Trophy,
   Medal,
   Crown,
+  Globe,
+  Calculator,
+  Brain,
+  Swords,
 } from 'lucide-react'
 
 export const DashboardPage: React.FC = () => {
@@ -85,7 +89,7 @@ export const DashboardPage: React.FC = () => {
             <div className="p-5 flex flex-col md:flex-row items-center justify-between gap-4 bg-gradient-to-r from-green-900/30 via-green-800/20 to-emerald-900/30">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 flex items-center justify-center border-2 border-green-400 bg-green-400/20">
-                  <span className="text-2xl">⚔️</span>
+                  <Swords size={24} className="text-green-400" />
                 </div>
                 <div>
                   <h3 className="font-pixel text-[10px] text-green-400">TYPING STRIKE 3D!</h3>
@@ -121,13 +125,13 @@ export const DashboardPage: React.FC = () => {
           <h2 className="font-pixel text-[11px] text-pixel-cream mt-8">PILIH DUNIA TYPING</h2>
           <div className="grid md:grid-cols-3 gap-4">
             {[
-              { id: 1, nama: 'Bahasa Inggris', deskripsi: 'Kata & frasa Inggris', color: '#B5533C', icon: '🇬🇧' },
-              { id: 2, nama: 'Matematika Dasar', deskripsi: 'Angka & persamaan', color: '#D9A24B', icon: '🔢' },
-              { id: 3, nama: 'Logika & Umum', deskripsi: 'Teka-teki & logika', color: '#6FCF6F', icon: '🧠' },
+              { id: 1, nama: 'Bahasa Inggris', deskripsi: 'Kata & frasa Inggris', color: '#B5533C', icon: <Globe size={32} /> },
+              { id: 2, nama: 'Matematika Dasar', deskripsi: 'Angka & persamaan', color: '#D9A24B', icon: <Calculator size={32} /> },
+              { id: 3, nama: 'Logika & Umum', deskripsi: 'Teka-teki & logika', color: '#6FCF6F', icon: <Brain size={32} /> },
             ].map((d) => (
               <Link key={d.id} to="/typing" className="group">
                 <div className="pixel-panel p-4 h-full pixel-card-hover cursor-pointer transition-all">
-                  <div className="text-4xl mb-3">{d.icon}</div>
+                  <div className="mb-3 flex justify-center" style={{ color: d.color }}>{d.icon}</div>
                   <h3 className="font-pixel text-[9px] text-pixel-cream">{d.nama}</h3>
                   <p className="font-vt text-base text-pixel-cream/40 mt-1">{d.deskripsi}</p>
                 </div>

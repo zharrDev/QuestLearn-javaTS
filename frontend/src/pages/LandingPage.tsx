@@ -5,11 +5,13 @@ import {
   Crosshair,
   MessageSquare,
   Trophy,
-  Castle,
-  Mountain,
-  TreePine,
   ArrowRight,
   Sparkles,
+  Globe,
+  Calculator,
+  Brain,
+  Swords,
+  Target,
 } from 'lucide-react'
 
 const SLIDES = [
@@ -185,19 +187,19 @@ export const LandingPage: React.FC = () => {
         <div className="grid md:grid-cols-3 gap-6 mt-8">
           {[
             {
-              icon: <Castle size={32} />,
+              icon: <Globe size={32} />,
               name: 'Desa Inggris',
               desc: 'Kata & frasa bahasa Inggris umum',
               color: '#B5533C',
             },
             {
-              icon: <Mountain size={32} />,
+              icon: <Calculator size={32} />,
               name: 'Gurun Matematika',
               desc: 'Angka, simbol, dan persamaan',
               color: '#D9A24B',
             },
             {
-              icon: <TreePine size={32} />,
+              icon: <Brain size={32} />,
               name: 'Hutan Logika',
               desc: 'Teka-teki dan istilah logika',
               color: '#6FCF6F',
