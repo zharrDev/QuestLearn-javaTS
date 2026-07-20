@@ -7,6 +7,7 @@ import { typingService } from '../../services/typing.service'
 interface LocationState {
   session: TypingStartResponse
   difficulty: DifficultyLevel
+  durationSec: 30 | 60 | 300
 }
 
 export default function TypingArenaPage() {
@@ -72,6 +73,7 @@ export default function TypingArenaPage() {
       difficulty={state.difficulty}
       duniaId={state.session.duniaId}
       duniaNama={state.session.duniaNama}
+      durationSec={state.durationSec}
       onSessionEnd={handleSessionEnd}
     />
   )

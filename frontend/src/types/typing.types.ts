@@ -52,7 +52,7 @@ export interface EnemyState {
   targetPosition: [number, number, number];
   alive: boolean;
   speed: number;
-  letterStatuses: ('pending' | 'correct' | 'wrong' | 'completed')[];
+  letterStatuses: ('pending' | 'targeting' | 'correct' | 'wrong' | 'completed')[];
 }
 
 export type DifficultyLevel = 'EASY' | 'MEDIUM' | 'HARD';

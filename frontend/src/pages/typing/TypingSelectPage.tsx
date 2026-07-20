@@ -6,11 +6,19 @@ import type { Dunia } from '../../types/dunia.types'
 import type { TypingStartResponse, DifficultyLevel } from '../../types/typing.types'
 import { Globe, Calculator, Brain, Swords, Target, Zap } from 'lucide-react'
 
+type DurationOption = 30 | 60 | 300
+
 const difficultyConfig: Record<DifficultyLevel, { label: string; desc: string; color: string }> = {
   EASY: { label: 'Easy', desc: '3-5 huruf, lambat', color: '#4ade80' },
   MEDIUM: { label: 'Medium', desc: '5-8 huruf, sedang', color: '#fbbf24' },
   HARD: { label: 'Hard', desc: 'Kalimat, cepat', color: '#ff4444' },
 }
+
+const durationOptions: { value: DurationOption; label: string }[] = [
+  { value: 30, label: '30 detik' },
+  { value: 60, label: '1 menit' },
+  { value: 300, label: '5 menit' },
+]
 
 const duniaIcons: Record<number, React.ReactNode> = {
   1: <Globe size={40} className="text-village-terracotta" />,
@@ -28,6 +36,7 @@ export default function TypingSelectPage() {
   const [dunias, setDunias] = useState<Dunia[]>(mockDunias)
   const [selectedDunia, setSelectedDunia] = useState<Dunia | null>(null)
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('EASY')
+  const [durationSec, setDurationSec] = useState<DurationOption>(60)
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
@@ -45,7 +54,7 @@ export default function TypingSelectPage() {
     setLoading(true)
     try {
       const data = await typingService.startSession(selectedDunia.id, difficulty)
-      navigate(`/typing/arena`, { state: { session: data, difficulty } })
+      navigate(`/typing/arena`, { state: { session: data, difficulty, durationSec } })
     } catch {
       const mockWords = getMockWords(selectedDunia.id, difficulty)
       const mockSession: TypingStartResponse = {
@@ -56,7 +65,7 @@ export default function TypingSelectPage() {
         duniaNama: selectedDunia.nama,
         duniaId: selectedDunia.id,
       }
-      navigate(`/typing/arena`, { state: { session: mockSession, difficulty } })
+      navigate(`/typing/arena`, { state: { session: mockSession, difficulty, durationSec } })
     } finally {
       setLoading(false)
     }
@@ -66,10 +75,10 @@ export default function TypingSelectPage() {
     <div className="min-h-screen bg-gray-900 text-white font-pixel p-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <h1 className="text-4xl text-green-400 mb-2 flex items-center justify-center gap-3">
+          <h1 className="text-4xl text-green-400 mb-2 flex items-center justify-center gap-3" style={{ fontFamily: '"Press Start 2P", monospace' }}>
             <Swords size={32} className="text-green-400" /> Typing Strike
           </h1>
-          <p className="text-gray-400">Side-scroller 2D — ketik cepat, tebas kotak huruf!</p>
+          <p className="text-gray-400" style={{ fontFamily: '"Press Start 2P", monospace' }}>Side-scroller 2D — ketik cepat, tebas kotak huruf!</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-4 mb-8">
@@ -86,14 +95,14 @@ export default function TypingSelectPage() {
               <div className="mb-3 flex justify-center">
                 {duniaIcons[d.id] || <Globe size={40} />}
               </div>
-              <div className="font-bold text-lg">{d.nama}</div>
-              <div className="text-xs text-gray-400 mt-1">{d.deskripsi}</div>
+              <div className="font-bold text-lg" style={{ fontFamily: '"Press Start 2P", monospace' }}>{d.nama}</div>
+              <div className="text-xs text-gray-400 mt-1" style={{ fontFamily: '"Press Start 2P", monospace' }}>{d.deskripsi}</div>
             </button>
           ))}
         </div>
 
         <div className="bg-gray-800 rounded-lg p-6 mb-8">
-          <h2 className="text-xl mb-4 text-center">Pilih Tingkat Kesulitan</h2>
+          <h2 className="text-xl mb-4 text-center" style={{ fontFamily: '"Press Start 2P", monospace' }}>Pilih Tingkat Kesulitan</h2>
           <div className="flex gap-4 justify-center">
             {(Object.entries(difficultyConfig) as [DifficultyLevel, typeof difficultyConfig['EASY']][]).map(([key, cfg]) => (
               <button
@@ -105,13 +114,32 @@ export default function TypingSelectPage() {
                     : 'border-gray-600 bg-gray-700/50 hover:border-gray-400'
                 }`}
               >
-                <div className="font-bold flex items-center gap-2 justify-center" style={{ color: cfg.color }}>
+                <div className="font-bold flex items-center gap-2 justify-center" style={{ color: cfg.color, fontFamily: '"Press Start 2P", monospace' }}>
                   {key === 'EASY' && <Target size={14} />}
                   {key === 'MEDIUM' && <Zap size={14} />}
                   {key === 'HARD' && <Zap size={14} className="text-red-400" />}
                   {cfg.label}
                 </div>
-                <div className="text-xs text-gray-400 mt-1">{cfg.desc}</div>
+                <div className="text-xs text-gray-400 mt-1" style={{ fontFamily: '"Press Start 2P", monospace' }}>{cfg.desc}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-gray-800 rounded-lg p-6 mb-8">
+          <h2 className="text-xl mb-4 text-center" style={{ fontFamily: '"Press Start 2P", monospace' }}>Durasi</h2>
+          <div className="flex gap-4 justify-center">
+            {durationOptions.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setDurationSec(opt.value)}
+                className={`px-6 py-3 rounded-lg border-2 transition-all ${
+                  durationSec === opt.value
+                    ? 'border-green-400 bg-green-900/30 scale-105'
+                    : 'border-gray-600 bg-gray-700/50 hover:border-gray-400'
+                }`}
+              >
+                <div className="font-bold" style={{ fontFamily: '"Press Start 2P", monospace' }}>{opt.label}</div>
               </button>
             ))}
           </div>
@@ -123,7 +151,7 @@ export default function TypingSelectPage() {
             disabled={!selectedDunia || loading}
             className="px-10 py-4 bg-green-600 hover:bg-green-500 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-xl font-bold transition-all flex items-center gap-2 mx-auto"
           >
-            {loading ? 'Memuat...' : <><Swords size={20} /> Mulai Combat!</>}
+            <span style={{ fontFamily: '"Press Start 2P", monospace' }}>{loading ? 'Memuat...' : <><Swords size={20} /> Mulai Combat!</>}</span>
           </button>
         </div>
       </div>
