@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import type { EnemyState, DifficultyLevel } from "../../types/typing.types";
+import { GAME_CONSTANTS, CFG, THEMES, GROUND_RATIO, ANIM } from "../../config/game.config";
 
 type PState = "idle" | "run" | "jump" | "slash";
 
@@ -24,48 +25,8 @@ function uid() {
   return Math.random().toString(36).substring(2, 9);
 }
 
-// Jarak antar huruf di dalam satu kata (px) & jarak minimum antar musuh (px).
-// Dinaikkan/diturunkan di sini kalau mau lebih lapang/rapat.
-const LETTER_SPACING = 110;
-const MIN_ENEMY_GAP = 160;
-
-const CFG = {
-  EASY: { maxEn: 4, waveSz: 10, baseSpd: 0, dashSpd: 220, spawnGap: 350 },
-  MEDIUM: { maxEn: 6, waveSz: 16, baseSpd: 0, dashSpd: 260, spawnGap: 280 },
-  HARD: { maxEn: 10, waveSz: 24, baseSpd: 0, dashSpd: 300, spawnGap: 220 },
-};
-
-const THEMES: Record<number, { bgFile: string; boxFile: string }> = {
-  1: {
-    bgFile: "/assets/village-960x360.png",
-    boxFile: "/assets/crate-blank-32-removebg-preview.png",
-  },
-  2: {
-    bgFile: "/assets/desert-ruins-960x360.png",
-    boxFile: "/assets/sandstone-block-32-removebg-preview.png",
-  },
-  3: {
-    bgFile: "/assets/forest-runes-960x360.png",
-    boxFile: "/assets/mossy-crate-32-removebg-preview.png",
-  },
-};
-
-// Rasio posisi tanah (garis rumput/lantai) relatif terhadap tinggi canvas, PER TEMA.
-// Kalibrasi manual: buka gambar background-nya, lihat garis tanah asli ada di berapa
-// persen dari tinggi gambar, lalu masukkan angka itu di sini. Naikkan angka kalau
-// karakter masih "melayang" di atas tanah gambar, turunkan kalau kakinya kebenam.
-const GROUND_RATIO: Record<number, number> = {
-  1: 0.82, // village
-  2: 0.8, // desert
-  3: 0.84, // forest
-};
-
-const ANIM = {
-  idle: { pre: "idle_", cnt: 4 },
-  run: { pre: "run_", cnt: 7 },
-  jump: { pre: "jump_", cnt: 2 },
-  slash: { pre: "sword_slash_attack_", cnt: 7 },
-};
+const LETTER_SPACING = GAME_CONSTANTS.LETTER_SPACING;
+const MIN_ENEMY_GAP = GAME_CONSTANTS.MIN_ENEMY_GAP;
 
 const loaded: Record<string, HTMLImageElement> = {};
 function ld(src: string): Promise<void> {
@@ -140,13 +101,15 @@ interface G {
   stateT: number;
   jumping: boolean;
   camX: number;
-  charX: number;
-  baseSpd: number;
-  spawnNextX: number;
+  // Jarak "lunge" karakter dari posisi jaga (px, 0 = di posisi jaga).
+  lunge: number;
+  homeScreenX: number;
+  viewW: number;
+  hp: number;
+  maxHp: number;
   totalKilledTarget: number;
   dashing: boolean;
   dashTarget: number;
-  dashOrigin: number;
   dashPhase: "" | "approach" | "attack";
   timeLeft: number;
   durationSec: number;
@@ -205,6 +168,9 @@ export default function TypingArena({
     combo: 0,
     maxCombo: 0,
     kills: 0,
+    missed: 0,
+    hp: cfg.hearts,
+    maxHp: cfg.hearts,
     wave: 1,
     wpm: 0,
     acc: 100,
@@ -247,13 +213,14 @@ export default function TypingArena({
       stateT: 0,
       jumping: false,
       camX: 0,
-      charX: 0,
-      baseSpd: cfg.baseSpd,
-      spawnNextX: 120,
+      lunge: 0,
+      homeScreenX: 160,
+      viewW: 1280,
+      hp: cfg.hearts,
+      maxHp: cfg.hearts,
       totalKilledTarget: 0,
       dashing: false,
       dashTarget: 0,
-      dashOrigin: 0,
       dashPhase: "",
       timeLeft: durationSec,
       durationSec,
@@ -302,14 +269,24 @@ export default function TypingArena({
     };
   }
 
-  // Spawn satu musuh baru di ekor antrean, jarak X-nya dihitung dari PANJANG KATA
-  // musuh itu sendiri (bukan angka tetap) supaya kata panjang tidak numpuk dengan
-  // musuh berikutnya. Ini yang memperbaiki bug "huruf dobel/ketumpuk".
+  // Spawn satu musuh baru. Saat sesi sudah jalan, musuh muncul dari sisi KANAN layar
+  // (mengikuti kamera) lalu bergerak mendekat ke karakter. Saat belum mulai, musuh
+  // disebar dulu di layar supaya langsung kelihatan.
+  // Jarak X antar musuh dihitung dari PANJANG KATA masing-masing supaya kata panjang
+  // tidak numpuk dengan musuh berikutnya (bug "huruf dobel/ketumpuk").
   function spawnNext(g: G) {
-    const en = spawnEnAt(g, g.spawnNextX);
+    const alive = g.en.filter((e) => e.alive);
+    let x = g.started
+      ? g.camX + g.viewW + 80
+      : g.camX + g.viewW * 0.42 + alive.length * 300;
+    for (const e of alive) {
+      const rightEdge =
+        e.position[0] + (e.word.length - 1 - e.typedIndex) * LETTER_SPACING;
+      const minX = rightEdge + LETTER_SPACING + MIN_ENEMY_GAP;
+      if (minX > x) x = minX;
+    }
+    const en = spawnEnAt(g, x);
     g.en.push(en);
-    const wordWidth = en.word.length * LETTER_SPACING;
-    g.spawnNextX += wordWidth + MIN_ENEMY_GAP + Math.random() * 80;
     return en;
   }
 
@@ -371,10 +348,8 @@ export default function TypingArena({
       (e) => e.word[e.typedIndex].toLowerCase() === ch,
     );
     if (match.length > 0) {
-      match.sort(
-        (a, b) =>
-          Math.abs(a.position[0] - g.charX) - Math.abs(b.position[0] - g.charX),
-      );
+      // Semua musuh selalu ada di depan karakter, jadi yang paling kiri = paling dekat.
+      match.sort((a, b) => a.position[0] - b.position[0]);
       const t = match[0];
 
       // Cancel current dash if targeting a different enemy
@@ -398,8 +373,15 @@ export default function TypingArena({
       g.pendingTarget = { enemy: t, letterIdx: idx };
 
       g.dashing = true;
-      g.dashTarget = t.position[0] - 40;
-      g.dashOrigin = g.charX;
+      // Target lunge dihitung relatif ke posisi jaga karakter (layar), bukan world x,
+      // dan dibatasi supaya karakter tidak lari keluar layar.
+      g.dashTarget = Math.max(
+        0,
+        Math.min(
+          t.position[0] - g.camX - g.homeScreenX - 40,
+          g.viewW * 0.5,
+        ),
+      );
       g.dashPhase = "approach";
       g.state = "run";
       g.stateT = Date.now();
@@ -436,6 +418,9 @@ export default function TypingArena({
         combo: g.combo,
         maxCombo: g.maxCombo,
         kills: g.kills,
+        missed: g.missed,
+        hp: g.hp,
+        maxHp: g.maxHp,
         wave: g.wv,
         wpm: g.wpm,
         acc: g.acc,
@@ -584,16 +569,37 @@ export default function TypingArena({
 
     function drawChar(g: G) {
       const baseY = g.gy;
-      const screenX = cvs.width * 0.12;
+      const homeScreenX = Math.round(cvs.width * 0.12);
+      g.homeScreenX = homeScreenX;
+
+      // Dunia terus bergerak ke kiri selama sesi jalan → efek karakter berlari
+      // menyusuri level (side-scroller), sekaligus jadi dasar garis pertahanan.
+      if (g.started && !g.over) g.camX += cfg.worldSpd / 60;
 
       if (g.dashing) {
         if (g.dashPhase === "approach") {
-          const dx = g.dashTarget - g.charX;
-          if (Math.abs(dx) > 18) {
+          // Ikuti terus posisi kotak target — musuh juga terus bergerak mendekat.
+          if (g.pendingTarget) {
+            g.dashTarget = Math.max(
+              0,
+              Math.min(
+                g.pendingTarget.enemy.position[0] -
+                  g.camX -
+                  homeScreenX -
+                  40,
+                cvs.width * 0.5,
+              ),
+            );
+          }
+          const dx = g.dashTarget - g.lunge;
+          if (Math.abs(dx) > 14) {
             // Ease-out: makin dekat ke target, makin pelan gerakannya — terasa lebih
             // "natural" daripada gerak linear/patah di ujung.
-            const easeAmount = Math.min(Math.abs(dx) * 0.22, cfg.dashSpd / 60);
-            g.charX += Math.sign(dx) * easeAmount;
+            const easeAmount = Math.min(
+              Math.max(Math.abs(dx) * 0.16, 5),
+              cfg.dashSpd / 20,
+            );
+            g.lunge += Math.sign(dx) * easeAmount;
           } else {
             g.dashPhase = "attack";
             g.state = "slash";
@@ -644,6 +650,16 @@ export default function TypingArena({
           }
         } else if (g.dashPhase === "attack") {
         }
+      } else {
+        // Setelah menebas / saat menganggur, karakter menarik diri kembali ke posisi
+        // jaga sambil memainkan animasi lari.
+        if (g.lunge > 2) {
+          g.lunge *= 0.85;
+          if (!g.jumping) g.state = "run";
+        } else {
+          g.lunge = 0;
+          if (g.state === "run" && !g.jumping) g.state = "idle";
+        }
       }
 
       if (g.jumping) {
@@ -660,11 +676,8 @@ export default function TypingArena({
         g.py = baseY - 4;
       }
 
-      const runSpd = g.dashing && g.dashPhase === "approach" ? 0 : g.baseSpd;
-      g.charX += runSpd / 60;
-
-      g.camX = g.charX - screenX;
-      if (g.camX < 0) g.camX = 0;
+      // Posisi karakter di layar = posisi jaga + jarak lunge (selalu di dalam layar).
+      const screenX = homeScreenX + g.lunge;
 
       g.animT += 0.04;
 
@@ -689,7 +702,7 @@ export default function TypingArena({
       cctx.fillStyle = "rgba(0,0,0,0.15)";
       cctx.beginPath();
       cctx.ellipse(
-        screenX - (g.dashing ? (g.dashTarget - g.charX) * 0.3 : 0),
+        screenX - (g.dashing ? (g.dashTarget - g.lunge) * 0.2 : 0),
         baseY + 2,
         22,
         3,
@@ -859,19 +872,48 @@ export default function TypingArena({
       }
 
       if (!g.over) {
-        // Jaga jumlah musuh AKTIF di layar tetap terbatas (maks 4, atau cfg.maxEn kalau
-        // lebih kecil), nambah SATU-SATU lewat spawnNext (jarak dinamis sesuai panjang
-        // kata) tiap kali ada slot kosong — bukan borongan sekaligus 10-24 seperti
-        // sebelumnya. Ini yang menghapus tumpukan huruf di screenshot kamu.
+        g.viewW = w;
+        // Pastikan garis tanah sudah terhitung sebelum spawn musuh di frame pertama
+        // (drawBg() juga men-set nilai yang sama — rumusnya harus konsisten).
+        g.gy = h * (GROUND_RATIO[duniaId] || 0.8);
+
+        // Jaga jumlah musuh AKTIF di layar tetap terbatas, nambah SATU-SATU lewat
+        // spawnNext (jarak dinamis sesuai panjang kata) tiap kali ada slot kosong.
         g.en = g.en.filter((e) => e.alive);
-        const targetOnScreen = Math.min(cfg.maxEn, 4);
+        const targetOnScreen = cfg.onScreen;
         while (g.en.filter((e) => e.alive).length < targetOnScreen) {
           spawnNext(g);
         }
 
-        // Nomor WAVE di HUD sekarang dihitung dari total kill, tetap naik seiring
-        // progres tanpa perlu logic "borongan spawn" lagi.
+        // Nomor WAVE di HUD dihitung dari total kill.
         g.wv = 1 + Math.floor(g.totalKilledTarget / cfg.waveSz);
+
+        // ==== TEKANAN WAKTU: musuh bergerak mendekat ke garis pertahanan ====
+        // Kalau ada kotak yang nyampe garis jaga (belum habis ditebas), grup itu
+        // dianggap LOLOS: -1 nyawa, combo reset, screen shake. Nyawa habis = game over.
+        if (g.started) {
+          const worldDrift = (cfg.enemySpd - cfg.worldSpd) / 60;
+          for (const en of g.en) en.position[0] -= worldDrift;
+
+          const defendX = g.camX + g.homeScreenX;
+          for (const en of g.en) {
+            if (!en.alive) continue;
+            if (g.pendingTarget && g.pendingTarget.enemy.id === en.id) continue;
+            if (en.position[0] <= defendX) {
+              en.alive = false;
+              g.combo = 0;
+              g.missed++;
+              g.hp = Math.max(0, g.hp - 1);
+              g.shT = 8;
+              addP(g, en.position[0], en.position[1], "#ef4444", 14);
+              addFloatText(g, en.position[0], en.position[1], "MISS!", "#ef4444");
+              if (g.hp <= 0) {
+                g.over = true;
+                g.endT = now;
+              }
+            }
+          }
+        }
 
         for (const p of g.parts) {
           p.life += 1 / 60;
@@ -951,6 +993,12 @@ export default function TypingArena({
             </span>
             <span className="text-purple-400">KILLS</span>
             <span className="text-white text-right">{hud.kills}</span>
+            <span className="text-red-400">NYAWA</span>
+            <span className="text-right" style={{ color: hud.hp > 2 ? "#ff6b6b" : hud.hp > 0 ? "#ffaa00" : "#ff2222" }}>
+              {hud.hp}/{hud.maxHp}
+            </span>
+            <span className="text-pink-400">MISS</span>
+            <span className="text-white text-right">{hud.missed}</span>
             <span className="text-blue-400 ml-2">WAVE</span>
             <span className="text-white text-right">{hud.wave}</span>
           </div>
@@ -1013,10 +1061,13 @@ export default function TypingArena({
         <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-20">
           <div className="bg-gray-900 border-2 border-green-500 px-8 py-6 rounded text-center">
             <div
-              className="text-3xl text-green-400 font-bold mb-3"
-              style={{ fontFamily: '"Press Start 2P", monospace' }}
+              className="text-3xl font-bold mb-3"
+              style={{
+                fontFamily: '"Press Start 2P", monospace',
+                color: hud.hp <= 0 ? "#ff4444" : "#4ade80",
+              }}
             >
-              TIME'S UP!
+              {hud.hp <= 0 ? "GAME OVER!" : "TIME'S UP!"}
             </div>
             <div
               className="grid grid-cols-2 gap-y-2 gap-x-6 text-xs mb-4"
@@ -1049,4 +1100,3 @@ export default function TypingArena({
     </div>
   );
 }
-// opencode -s ses_0816df293ffeVXKEDPAeDpYIow

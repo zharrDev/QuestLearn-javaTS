@@ -150,8 +150,8 @@ java -jar target/questlearn-backend-0.0.1-SNAPSHOT.jar
 ### Frontend (React + Vite)
 ```bash
 cd frontend
-npm install
-npm run dev
+pnpm install
+pnpm dev
 # frontend: http://localhost:5173
 # proxy /api ke backend :8080 sudah dikonfigurasi di vite.config.ts
 ```
@@ -159,7 +159,7 @@ npm run dev
 ### Build Production
 ```bash
 cd frontend
-npm run build
+pnpm build
 # dist/ siap di-deploy
 ```
 
