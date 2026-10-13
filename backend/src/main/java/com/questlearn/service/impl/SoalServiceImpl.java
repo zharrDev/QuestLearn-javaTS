@@ -14,7 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,7 +42,7 @@ public class SoalServiceImpl implements SoalService {
     }
 
     @Override
-    public SoalResponse create(SoalRequest req, MultipartFile file) {
+    public SoalResponse create(SoalRequest req, byte[] fileData, String fileOriginalName) {
         Level level = levelRepository.findById(req.getLevelId()).orElseThrow(() -> new ResourceNotFoundException("Level tidak ditemukan"));
         Soal soal = Soal.builder()
                 .level(level).pertanyaan(req.getPertanyaan())
@@ -53,15 +52,15 @@ public class SoalServiceImpl implements SoalService {
                 .tingkatKesulitan(req.getTingkatKesulitan()!=null?req.getTingkatKesulitan():"SEDANG")
                 .xpPoint(req.getXpPoint()!=null?req.getXpPoint():10)
                 .build();
-        if (file!=null && !file.isEmpty()) {
-            String url = fileStorageService.storeFile(file);
+        if (fileData != null && fileData.length > 0) {
+            String url = fileStorageService.storeFile(fileData, fileOriginalName);
             soal.setGambarUrl(url);
         }
         return toResponse(soalRepository.save(soal));
     }
 
     @Override
-    public SoalResponse update(Long id, SoalRequest req, MultipartFile file) {
+    public SoalResponse update(Long id, SoalRequest req, byte[] fileData, String fileOriginalName) {
         Soal soal = soalRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Soal tidak ditemukan"));
         if (req.getLevelId()!=null) {
             Level level = levelRepository.findById(req.getLevelId()).orElseThrow(() -> new ResourceNotFoundException("Level tidak ditemukan"));
@@ -74,8 +73,8 @@ public class SoalServiceImpl implements SoalService {
         soal.setPembahasan(req.getPembahasan());
         if (req.getTingkatKesulitan()!=null) soal.setTingkatKesulitan(req.getTingkatKesulitan());
         if (req.getXpPoint()!=null) soal.setXpPoint(req.getXpPoint());
-        if (file!=null && !file.isEmpty()) {
-            String url = fileStorageService.storeFile(file);
+        if (fileData != null && fileData.length > 0) {
+            String url = fileStorageService.storeFile(fileData, fileOriginalName);
             soal.setGambarUrl(url);
         }
         return toResponse(soalRepository.save(soal));

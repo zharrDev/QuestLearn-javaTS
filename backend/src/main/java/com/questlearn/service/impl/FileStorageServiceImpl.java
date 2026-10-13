@@ -5,8 +5,6 @@ import com.questlearn.exception.BadRequestException;
 import com.questlearn.service.FileStorageService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -19,19 +17,21 @@ public class FileStorageServiceImpl implements FileStorageService {
     private String uploadDir;
 
     @Override
-    public String storeFile(MultipartFile file) {
-        if (file.isEmpty()) throw new BadRequestException("File kosong");
-        String fileName = StringUtils.cleanPath(file.getOriginalFilename());
+    public String storeFile(byte[] fileData, String originalFilename) {
+        if (fileData == null || fileData.length == 0) throw new BadRequestException("File kosong");
+        String fileName = originalFilename != null ? originalFilename : "file";
+        fileName = fileName.replace("\\", "/");
+        int slash = fileName.lastIndexOf('/');
+        if (slash >= 0) fileName = fileName.substring(slash + 1);
         if (fileName.contains("..")) throw new BadRequestException("Invalid path");
-        String ext = "";
         int i = fileName.lastIndexOf('.');
-        if (i > 0) ext = fileName.substring(i);
+        String ext = (i > 0) ? fileName.substring(i) : "";
         String newName = UUID.randomUUID() + ext;
         try {
             Path dir = Paths.get(uploadDir).toAbsolutePath().normalize();
             Files.createDirectories(dir);
             Path target = dir.resolve(newName);
-            Files.copy(file.getInputStream(), target, StandardCopyOption.REPLACE_EXISTING);
+            Files.write(target, fileData);
             return "/uploads/" + newName;
         } catch (IOException e) {
             throw new BadRequestException("Gagal menyimpan file: " + e.getMessage());

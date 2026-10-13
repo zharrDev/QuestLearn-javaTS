@@ -2,16 +2,18 @@ package com.questlearn.config;
 
 import com.questlearn.entity.*;
 import com.questlearn.repository.*;
+import com.questlearn.security.PasswordEncoder;
+import io.quarkus.runtime.StartupEvent;
+import jakarta.annotation.Priority;
+import jakarta.enterprise.event.Observes;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.*;
 
 @Component
-public class DataSeeder implements CommandLineRunner {
+public class DataSeeder {
 
     @Autowired UserRepository userRepository;
     @Autowired UserProfileRepository profileRepository;
@@ -23,8 +25,7 @@ public class DataSeeder implements CommandLineRunner {
 
     @Autowired PasswordEncoder encoder;
 
-    @Override
-    public void run(String... args) throws Exception {
+    void onStart(@Observes @Priority(1000) StartupEvent ev) {
         if (userRepository.count() > 0) return; // already seeded
 
         System.out.println("=== SEEDING DATA QUESTLEARN ===");

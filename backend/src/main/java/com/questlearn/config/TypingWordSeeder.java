@@ -2,22 +2,21 @@ package com.questlearn.config;
 
 import com.questlearn.entity.*;
 import com.questlearn.repository.*;
+import io.quarkus.runtime.StartupEvent;
+import jakarta.annotation.Priority;
+import jakarta.enterprise.event.Observes;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
 
 @Component
-@Order(2)
-public class TypingWordSeeder implements CommandLineRunner {
+public class TypingWordSeeder {
 
     @Autowired TypingWordRepository typingWordRepository;
     @Autowired DuniaRepository duniaRepository;
 
-    @Override
-    public void run(String... args) throws Exception {
+    void onStart(@Observes @Priority(2000) StartupEvent ev) {
         if (typingWordRepository.count() > 0) return;
 
         System.out.println("=== SEEDING TYPING WORDS ===");

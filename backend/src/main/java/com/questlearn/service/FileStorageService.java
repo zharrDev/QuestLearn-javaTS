@@ -1,5 +1,4 @@
 package com.questlearn.service;
-import org.springframework.web.multipart.MultipartFile;
 public interface FileStorageService {
-    String storeFile(MultipartFile file);
+    String storeFile(byte[] fileData, String originalFilename);
 }

@@ -4,7 +4,6 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -21,18 +20,6 @@ public class JwtTokenProvider {
 
     private Key key() {
         return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
-    }
-
-    public String generateToken(Authentication authentication) {
-        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
-        return Jwts.builder()
-                .setSubject(userPrincipal.getUsername())
-                .claim("id", userPrincipal.getId())
-                .claim("role", userPrincipal.getRole())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(new Date().getTime() + jwtExpiration))
-                .signWith(key(), SignatureAlgorithm.HS256)
-                .compact();
     }
 
     public String generateTokenFromEmail(String email, Long id, String role) {

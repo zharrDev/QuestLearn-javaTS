@@ -5,10 +5,8 @@ import com.questlearn.dto.response.*;
 import com.questlearn.service.SoalService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -42,29 +40,14 @@ public class SoalController {
         return ResponseEntity.ok(ApiResponse.success(soalService.getById(id)));
     }
 
-    @PostMapping(value = "/admin/soal", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<ApiResponse<SoalResponse>> create(
-            @RequestPart("data") SoalRequest req,
-            @RequestPart(value = "file", required = false) MultipartFile file) {
-        return ResponseEntity.ok(ApiResponse.success("Soal dibuat", soalService.create(req, file)));
-    }
-
-    @PostMapping(value = "/admin/soal/json")
+    @PostMapping("/admin/soal/json")
     public ResponseEntity<ApiResponse<SoalResponse>> createJson(@RequestBody SoalRequest req) {
-        return ResponseEntity.ok(ApiResponse.success("Soal dibuat", soalService.create(req, null)));
-    }
-
-    @PutMapping(value = "/admin/soal/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE, MediaType.APPLICATION_JSON_VALUE})
-    public ResponseEntity<ApiResponse<SoalResponse>> updateForm(
-            @PathVariable Long id,
-            @RequestPart("data") SoalRequest req,
-            @RequestPart(value="file", required=false) MultipartFile file) {
-        return ResponseEntity.ok(ApiResponse.success("Soal diupdate", soalService.update(id, req, file)));
+        return ResponseEntity.ok(ApiResponse.success("Soal dibuat", soalService.create(req, null, null)));
     }
 
     @PutMapping("/admin/soal/{id}/json")
     public ResponseEntity<ApiResponse<SoalResponse>> updateJson(@PathVariable Long id, @RequestBody SoalRequest req) {
-        return ResponseEntity.ok(ApiResponse.success("Soal diupdate", soalService.update(id, req, null)));
+        return ResponseEntity.ok(ApiResponse.success("Soal diupdate", soalService.update(id, req, null, null)));
     }
 
     @DeleteMapping("/admin/soal/{id}")

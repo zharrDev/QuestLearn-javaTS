@@ -10,38 +10,35 @@ import com.questlearn.exception.ResourceNotFoundException;
 import com.questlearn.repository.UserProfileRepository;
 import com.questlearn.repository.UserRepository;
 import com.questlearn.security.JwtTokenProvider;
-import com.questlearn.security.UserDetailsImpl;
+import com.questlearn.security.PasswordEncoder;
 import com.questlearn.service.AuthService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.*;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
+import io.quarkus.security.identity.SecurityIdentity;
+import jakarta.enterprise.context.RequestScoped;
+import jakarta.inject.Inject;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@Service
+@RequestScoped
 public class AuthServiceImpl implements AuthService {
 
-    @Autowired UserRepository userRepository;
-    @Autowired UserProfileRepository profileRepository;
-    @Autowired PasswordEncoder passwordEncoder;
-    @Autowired AuthenticationManager authenticationManager;
-    @Autowired JwtTokenProvider tokenProvider;
+    @Inject UserRepository userRepository;
+    @Inject UserProfileRepository profileRepository;
+    @Inject PasswordEncoder passwordEncoder;
+    @Inject JwtTokenProvider tokenProvider;
+    @Inject SecurityIdentity securityIdentity;
 
     // simple in-memory token store for forgot password demo
     private Map<String, String> resetTokens = new HashMap<>();
 
     @Override
     public JwtResponse login(LoginRequest request) {
-        Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-        SecurityContextHolder.getContext().setAuthentication(auth);
-        UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
-        String jwt = tokenProvider.generateToken(auth);
-        User user = userRepository.findById(userDetails.getId()).orElseThrow();
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new BadRequestException("Email atau password salah"));
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
+            throw new BadRequestException("Email atau password salah");
+        }
+        String jwt = tokenProvider.generateTokenFromEmail(user.getEmail(), user.getId(), user.getRole().name());
         return JwtResponse.builder()
                 .token(jwt)
                 .id(user.getId())
@@ -74,11 +71,7 @@ public class AuthServiceImpl implements AuthService {
         UserProfile profile = UserProfile.builder().user(user).build();
         profileRepository.save(profile);
 
-        Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword()));
-        SecurityContextHolder.getContext().setAuthentication(auth);
-        UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
-        String jwt = tokenProvider.generateToken(auth);
+        String jwt = tokenProvider.generateTokenFromEmail(user.getEmail(), user.getId(), user.getRole().name());
 
         return JwtResponse.builder()
                 .token(jwt)
@@ -114,10 +107,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public User getCurrentUser() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null || !auth.isAuthenticated()) throw new BadRequestException("Unauthorized");
-        UserDetailsImpl principal = (UserDetailsImpl) auth.getPrincipal();
-        return userRepository.findById(principal.getId())
+        Long userId = securityIdentity.getAttribute("userId");
+        if (userId == null) throw new BadRequestException("Unauthorized");
+        return userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
     }
 }
