@@ -92,9 +92,9 @@ export const DashboardPage: React.FC = () => {
                   <Swords size={24} className="text-green-400" />
                 </div>
                 <div>
-                  <h3 className="font-pixel text-[10px] text-green-400">TYPING STRIKE 3D!</h3>
+                  <h3 className="font-pixel text-[10px] text-green-400">TYPING STRIKE!</h3>
                   <p className="font-vt text-sm text-pixel-cream/50">
-                    Latihan mengetik dengan combat 3D — kalahkan musuh dengan kecepatan & akurasi!
+                    Latihan mengetik side-scroller 2D — kalahkan kotak huruf dengan kecepatan & akurasi!
                   </p>
                 </div>
               </div>
@@ -174,7 +174,7 @@ export const DashboardPage: React.FC = () => {
                   <div className="w-8 h-8 bg-pixel-panel-light border border-[#2A3444] flex items-center justify-center font-pixel text-[7px]">{entry.nama[0]}</div>
                   <div className="flex-1">
                     <p className="font-vt text-base text-pixel-cream">{entry.nama}</p>
-                    <p className="font-pixel text-[6px] text-pixel-amber">{entry.totalXp} XP</p>
+                    <p className="font-pixel text-[6px] text-pixel-amber">{Math.round(entry.wpm ?? 0)} WPM</p>
                   </div>
                 </div>
               ))}

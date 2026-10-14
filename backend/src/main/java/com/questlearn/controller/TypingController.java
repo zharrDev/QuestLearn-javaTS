@@ -41,7 +41,7 @@ public class TypingController {
 
     @GetMapping("/leaderboard")
     public ResponseEntity<ApiResponse<List<LeaderboardEntry>>> leaderboard(
-            @RequestParam(required = false) String level) {
-        return ResponseEntity.ok(ApiResponse.success(typingService.getLeaderboard(level)));
+            @RequestParam(required = false) Long duniaId) {
+        return ResponseEntity.ok(ApiResponse.success(typingService.getLeaderboard(duniaId)));
     }
 }

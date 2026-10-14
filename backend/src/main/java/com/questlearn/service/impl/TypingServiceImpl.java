@@ -120,25 +120,34 @@ public class TypingServiceImpl implements TypingService {
     }
 
     @Override
-    public List<LeaderboardEntry> getLeaderboard(String level) {
-        List<TypingSession> sessions;
-        if (level != null && !level.isEmpty()) {
-            sessions = sessionRepository.findTop20ByOrderByWpmDesc().stream()
-                    .filter(s -> s.getLevel().equalsIgnoreCase(level))
-                    .limit(20)
-                    .collect(Collectors.toList());
-        } else {
-            sessions = sessionRepository.findTop20ByOrderByWpmDesc();
+    public List<LeaderboardEntry> getLeaderboard(Long duniaId) {
+        // Ranked by best WPM per user (the typing metric), not by XP. The dunia filter
+        // is applied in the database so sessions from other worlds can never crowd out
+        // a filtered ranking.
+        List<TypingSession> sessions = (duniaId != null)
+                ? sessionRepository.findTop500ByDuniaIdOrderByWpmDesc(duniaId)
+                : sessionRepository.findTop500ByOrderByWpmDesc();
+
+        // The list is already ordered by WPM desc, so the first row seen per user is
+        // that user's best session.
+        Map<Long, TypingSession> bestPerUser = new LinkedHashMap<>();
+        for (TypingSession s : sessions) {
+            if (s.getUser() == null) continue;
+            bestPerUser.putIfAbsent(s.getUser().getId(), s);
+            if (bestPerUser.size() >= 20) break;
         }
 
         List<LeaderboardEntry> result = new ArrayList<>();
         int rank = 1;
-        for (TypingSession s : sessions) {
+        for (TypingSession s : bestPerUser.values()) {
             result.add(LeaderboardEntry.builder()
                     .userId(s.getUser().getId())
                     .nama(s.getUser().getNama())
                     .avatarUrl(s.getUser().getAvatarUrl())
-                    .totalXp(s.getXpDidapat())
+                    .totalXp(s.getUser().getTotalXp())
+                    .wpm(s.getWpm())
+                    .akurasi(s.getAkurasi())
+                    .duniaNama(s.getDunia() != null ? s.getDunia().getNama() : null)
                     .rank(rank++)
                     .build());
         }

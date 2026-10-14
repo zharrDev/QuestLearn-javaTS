@@ -6,5 +6,9 @@ public class LeaderboardEntry {
     private String nama;
     private String avatarUrl;
     private Integer totalXp;
+    // Typing metric: ranking is based on the user's best WPM, not XP.
+    private Double wpm;
+    private Double akurasi;
+    private String duniaNama;
     private Integer rank;
 }

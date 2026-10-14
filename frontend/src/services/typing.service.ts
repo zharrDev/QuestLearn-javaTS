@@ -1,5 +1,6 @@
 import api from './api';
 import type { TypingStartResponse, TypingSessionResponse, SubmitTypingRequest } from '../types/typing.types';
+import type { LeaderboardEntry } from '../types/leaderboard.types';
 
 export const typingService = {
   async startSession(duniaId: number, level: string): Promise<TypingStartResponse> {
@@ -17,8 +18,9 @@ export const typingService = {
     return res.data.data;
   },
 
-  async getLeaderboard(level?: string): Promise<any[]> {
-    const res = await api.get('/typing/leaderboard', { params: { level } });
+  // Ranking is by best WPM; optional duniaId filters the ranking to one world.
+  async getLeaderboard(duniaId?: number): Promise<LeaderboardEntry[]> {
+    const res = await api.get('/typing/leaderboard', { params: { duniaId } });
     return res.data.data;
   }
 };

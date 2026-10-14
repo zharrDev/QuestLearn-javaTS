@@ -28,6 +28,7 @@ public class ProgressServiceImpl implements ProgressService {
     @Autowired SoalRepository soalRepository;
     @Autowired BadgeService badgeService;
     @Autowired UserBadgeRepository userBadgeRepository;
+    @Autowired com.questlearn.service.TypingService typingService;
 
     @Override
     public PaginatedResponse<ProgressResponse> getUserProgress(Long userId, Pageable pageable) {
@@ -194,18 +195,9 @@ public class ProgressServiceImpl implements ProgressService {
 
     @Override
     public List<LeaderboardEntry> getLeaderboard(String period) {
-        // period ignored in simple impl - would filter by date in real app
-        List<User> users = userRepository.findAll().stream()
-                .sorted((a,b)-> Integer.compare(b.getTotalXp()!=null?b.getTotalXp():0, a.getTotalXp()!=null?a.getTotalXp():0))
-                .limit(20).collect(Collectors.toList());
-        List<LeaderboardEntry> result = new ArrayList<>();
-        for (int i=0;i<users.size();i++) {
-            User u = users.get(i);
-            result.add(LeaderboardEntry.builder()
-                    .userId(u.getId()).nama(u.getNama()).avatarUrl(u.getAvatarUrl())
-                    .totalXp(u.getTotalXp()).rank(i+1).build());
-        }
-        return result;
+        // The leaderboard metric is typing WPM, so it shares the typing ranking.
+        // `period` is ignored (as before) until time-windowed ranking is implemented.
+        return typingService.getLeaderboard(null);
     }
 
     private ProgressResponse toResponse(ProgressUser p) {

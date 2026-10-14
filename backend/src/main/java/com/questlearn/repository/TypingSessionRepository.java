@@ -22,5 +22,10 @@ public interface TypingSessionRepository extends JpaRepository<TypingSession, Lo
 
     Optional<TypingSession> findFirstByUserIdAndDuniaIdOrderByAkurasiDesc(Long userId, Long duniaId);
 
-    List<TypingSession> findTop20ByOrderByWpmDesc();
+    // Leaderboard feed: fetch a wide WPM-ordered slice, then keep each user's best
+    // row in the service. Filtering by dunia happens in the database, not after a
+    // global limit (which would drop other worlds' sessions entirely).
+    List<TypingSession> findTop500ByOrderByWpmDesc();
+
+    List<TypingSession> findTop500ByDuniaIdOrderByWpmDesc(Long duniaId);
 }

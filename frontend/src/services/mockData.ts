@@ -15,9 +15,9 @@ export const mockBadges: Badge[] = [
 ]
 
 export const mockLeaderboard: LeaderboardEntry[] = [
-  { userId: 1, nama: "Demo Siswa", totalXp: 1240, rank: 1 },
-  { userId: 2, nama: "Rizky Pratama", totalXp: 1120, rank: 2 },
-  { userId: 3, nama: "Siti Aminah", totalXp: 980, rank: 3 },
-  { userId: 4, nama: "Budi Santoso", totalXp: 870, rank: 4 },
-  { userId: 5, nama: "Dewi Lestari", totalXp: 760, rank: 5 },
+  { userId: 1, nama: "Demo Siswa", totalXp: 1240, wpm: 52, akurasi: 96, rank: 1 },
+  { userId: 2, nama: "Rizky Pratama", totalXp: 1120, wpm: 47, akurasi: 93, rank: 2 },
+  { userId: 3, nama: "Siti Aminah", totalXp: 980, wpm: 41, akurasi: 90, rank: 3 },
+  { userId: 4, nama: "Budi Santoso", totalXp: 870, wpm: 36, akurasi: 88, rank: 4 },
+  { userId: 5, nama: "Dewi Lestari", totalXp: 760, wpm: 31, akurasi: 85, rank: 5 },
 ]

@@ -11,5 +11,5 @@ public interface TypingService {
     TypingStartResponse startSession(Long userId, Long duniaId, String level);
     TypingSessionResponse submitSession(Long userId, SubmitTypingRequest request);
     List<TypingSessionResponse> getUserSessions(Long userId);
-    List<LeaderboardEntry> getLeaderboard(String level);
+    List<LeaderboardEntry> getLeaderboard(Long duniaId);
 }

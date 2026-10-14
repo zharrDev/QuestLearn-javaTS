@@ -2,7 +2,7 @@ import { useRef, useEffect, useState, useCallback } from "react";
 import type { EnemyState, DifficultyLevel } from "../../types/typing.types";
 import { GAME_CONSTANTS, CFG, THEMES, GROUND_RATIO, ANIM } from "../../config/game.config";
 
-type PState = "idle" | "run" | "jump" | "slash";
+type PState = "idle" | "run" | "jump" | "slash" | "block" | "finisher";
 
 interface ArenaProps {
   words: string[];
@@ -116,6 +116,11 @@ interface G {
   pendingTarget: { enemy: EnemyState; letterIdx: number } | null;
   difficulty: DifficultyLevel;
   started: boolean;
+  // Anti-repetition word pool (reshuffled only once it is exhausted).
+  pool: string[];
+  lastWord: string;
+  // The box that should have been slashed when a wrong key was pressed.
+  wrongFlash: { enemyId: string; idx: number; t0: number } | null;
 }
 interface PArt {
   id: string;
@@ -227,6 +232,9 @@ export default function TypingArena({
       pendingTarget: null,
       difficulty,
       started: false,
+      pool: [],
+      lastWord: "",
+      wrongFlash: null,
     };
     gRef.current = g;
     return () => {
@@ -235,8 +243,32 @@ export default function TypingArena({
     };
   }, []);
 
+  // Anti-repetition: draw from a shuffled pool so a word cannot reappear until the
+  // whole bank has been used (spec section 4), instead of a random pick with
+  // replacement that could repeat the same word back-to-back.
+  function pickWord(g: G): string {
+    if (g.pool.length === 0) {
+      const shuffled = [...words];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      // Don't let the new cycle open with the previous cycle's last word.
+      if (shuffled.length > 1 && shuffled[shuffled.length - 1] === g.lastWord) {
+        [shuffled[shuffled.length - 1], shuffled[0]] = [
+          shuffled[0],
+          shuffled[shuffled.length - 1],
+        ];
+      }
+      g.pool = shuffled;
+    }
+    const w = g.pool.pop() as string;
+    g.lastWord = w;
+    return w;
+  }
+
   function spawnEnAt(g: G, wx: number): EnemyState {
-    const word = words[Math.floor(Math.random() * words.length)];
+    const word = pickWord(g);
     const rx = Math.random();
     const ranges = [
       { max: 0.35, min: 28, var: 12 },
@@ -393,8 +425,19 @@ export default function TypingArena({
         g.state = "jump";
       }
     } else {
+      // Spec 2.3: the box that should have been slashed blinks red and the character
+      // holds a brief block/parry pose; the group keeps advancing meanwhile.
+      const nearest = aliveEn.slice().sort((a, b) => a.position[0] - b.position[0])[0];
+      if (nearest) {
+        g.wrongFlash = { enemyId: nearest.id, idx: nearest.typedIndex, t0: Date.now() };
+      }
       g.combo = 0;
       g.shT = 4;
+      if (!g.dashing) {
+        g.state = "block";
+        g.stateT = Date.now();
+        g.animT = 0;
+      }
     }
   }, []);
 
@@ -535,8 +578,22 @@ export default function TypingArena({
           const isTargeting = en.letterStatuses[i] === "targeting";
           const isPendingTarget =
             i === en.typedIndex && en.letterStatuses[i] === "pending";
+          const wf = g.wrongFlash;
+          const wrongAge =
+            wf && wf.enemyId === en.id && wf.idx === i ? Date.now() - wf.t0 : Infinity;
+          const isWrongFlash = wrongAge < 320;
 
-          if (isTargeting) {
+          if (isWrongFlash) {
+            const blink = Math.floor(wrongAge / 90) % 2 === 0;
+            cctx.shadowColor = "#ff2222";
+            cctx.shadowBlur = blink ? 26 : 6;
+            cctx.strokeStyle = blink ? "#ff2222" : "#aa1111";
+            cctx.lineWidth = 5;
+            cctx.strokeRect(-sz / 2 - 6, -sz / 2 - 6, sz + 12, sz + 12);
+            cctx.shadowBlur = 0;
+            cctx.fillStyle = `rgba(255,34,34,${blink ? 0.35 : 0.15})`;
+            cctx.fillRect(-sz / 2 - 4, -sz / 2 - 4, sz + 8, sz + 8);
+          } else if (isTargeting) {
             cctx.shadowColor = "#ff8800";
             cctx.shadowBlur = 25;
             cctx.strokeStyle = "#ff8800";
@@ -642,6 +699,10 @@ export default function TypingArena({
                 g.totalKilledTarget++;
                 addP(g, bx, by, "#fbbf24", 14);
                 addFloatText(g, bx, by, `+${pts}`, "#fbbf24");
+                // Word cleared -> play the finisher pose (spec 2.4/2.5).
+                g.state = "finisher";
+                g.stateT = Date.now();
+                g.animT = 0;
               } else {
                 en.typedIndex++;
               }
@@ -712,7 +773,7 @@ export default function TypingArena({
       );
       cctx.fill();
 
-      const sc = 2.5;
+      const sc = g.state === "finisher" ? 2.9 : 2.5;
       const dustOn =
         g.state === "run" && !g.jumping && Math.sin(g.animT * 10) > 0.7;
       if (dustOn) {
@@ -732,9 +793,15 @@ export default function TypingArena({
       } else if (g.state === "run") {
         frames = gf("run");
         fi = Math.floor(g.animT * 10) % Math.max(1, frames.length);
+      } else if (g.state === "finisher") {
+        frames = gf("slash");
+        fi = Math.floor(g.animT * 12) % Math.max(1, frames.length);
       } else if (g.state === "slash") {
         frames = gf("slash");
         fi = Math.floor(g.animT * 22) % Math.max(1, frames.length);
+      } else if (g.state === "block") {
+        frames = gf("idle");
+        fi = 0;
       } else {
         frames = gf("idle");
         fi = Math.floor(g.animT * 5) % Math.max(1, frames.length);
@@ -752,6 +819,15 @@ export default function TypingArena({
       } else {
         cctx.fillStyle = "#ff00ff";
         cctx.fillRect(-26, -56, 52, 70);
+      }
+
+      // There is no dedicated block sprite yet, so the parry shield is drawn in code.
+      if (g.state === "block") {
+        cctx.strokeStyle = "rgba(120,200,255,0.85)";
+        cctx.lineWidth = 3;
+        cctx.beginPath();
+        cctx.arc(0, -22, 34, -Math.PI * 0.8, -Math.PI * 0.2);
+        cctx.stroke();
       }
       cctx.restore();
     }
@@ -932,12 +1008,18 @@ export default function TypingArena({
         if (g.shT < 0.1) g.shT = 0;
         if (
           g.dashPhase === "attack" &&
-          g.state === "slash" &&
-          now - g.stateT > 160
+          (g.state === "slash" || g.state === "finisher") &&
+          now - g.stateT > (g.state === "finisher" ? 320 : 160)
         ) {
           g.dashPhase = "";
           g.dashing = false;
           g.state = "idle";
+          g.animT = 0;
+        }
+        // Block/parry is a short hold, then back to idle.
+        if (g.state === "block" && now - g.stateT > 260) {
+          g.state = "idle";
+          g.stateT = now;
           g.animT = 0;
         }
       }
