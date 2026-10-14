@@ -9,7 +9,11 @@ public interface SoalRepository extends JpaRepository<Soal, Long> {
     List<Soal> findByLevelId(Long levelId);
     long countByLevelId(Long levelId);
     
-    @Query("SELECT s FROM Soal s WHERE " +
+    @Query(value = "SELECT s FROM Soal s WHERE " +
+           "(:levelId IS NULL OR s.level.id = :levelId) AND " +
+           "(:search IS NULL OR LOWER(s.pertanyaan) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+           "(:tingkat IS NULL OR s.tingkatKesulitan = :tingkat)",
+           countQuery = "SELECT COUNT(s) FROM Soal s WHERE " +
            "(:levelId IS NULL OR s.level.id = :levelId) AND " +
            "(:search IS NULL OR LOWER(s.pertanyaan) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
            "(:tingkat IS NULL OR s.tingkatKesulitan = :tingkat)")

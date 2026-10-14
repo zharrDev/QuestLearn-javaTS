@@ -9,7 +9,12 @@ import java.util.Optional;
 
 public interface DuniaRepository extends JpaRepository<Dunia, Long> {
     Optional<Dunia> findBySlug(String slug);
-    @Query("SELECT d FROM Dunia d WHERE " +
+    // countQuery is required: Quarkus spring-data-jpa otherwise derives it as
+    // "SELECT COUNT(*) SELECT d FROM ...", which is invalid JPQL.
+    @Query(value = "SELECT d FROM Dunia d WHERE " +
+           "(:search IS NULL OR LOWER(d.nama) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+           "(:isActive IS NULL OR d.isActive = :isActive)",
+           countQuery = "SELECT COUNT(d) FROM Dunia d WHERE " +
            "(:search IS NULL OR LOWER(d.nama) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
            "(:isActive IS NULL OR d.isActive = :isActive)")
     Page<Dunia> findWithFilter(String search, Boolean isActive, Pageable pageable);

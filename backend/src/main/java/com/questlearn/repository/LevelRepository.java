@@ -7,7 +7,10 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 public interface LevelRepository extends JpaRepository<Level, Long> {
     List<Level> findByDuniaIdOrderByUrutanAsc(Long duniaId);
-    @Query("SELECT l FROM Level l WHERE " +
+    @Query(value = "SELECT l FROM Level l WHERE " +
+           "(:duniaId IS NULL OR l.dunia.id = :duniaId) AND " +
+           "(:search IS NULL OR LOWER(l.nama) LIKE LOWER(CONCAT('%', :search, '%')))",
+           countQuery = "SELECT COUNT(l) FROM Level l WHERE " +
            "(:duniaId IS NULL OR l.dunia.id = :duniaId) AND " +
            "(:search IS NULL OR LOWER(l.nama) LIKE LOWER(CONCAT('%', :search, '%')))")
     Page<Level> findWithFilter(Long duniaId, String search, Pageable pageable);

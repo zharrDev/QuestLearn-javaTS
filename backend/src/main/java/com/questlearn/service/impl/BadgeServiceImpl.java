@@ -115,10 +115,14 @@ public class BadgeServiceImpl implements BadgeService {
                     if (lulus.stream().anyMatch(p->p.getSkor()!=null && p.getSkor()==100)) unlock = true;
                     break;
                 case "WPM":
-                    if (typingSessionRepository.findBestWpmByUserId(userId).orElse(0.0) >= val) unlock = true;
+                    Double bestWpm = typingSessionRepository.findFirstByUserIdOrderByWpmDesc(userId)
+                            .map(TypingSession::getWpm).orElse(0.0);
+                    if (bestWpm >= val) unlock = true;
                     break;
                 case "ACCURACY":
-                    if (typingSessionRepository.findBestAkurasiByUserId(userId).orElse(0.0) >= val) unlock = true;
+                    Double bestAcc = typingSessionRepository.findFirstByUserIdOrderByAkurasiDesc(userId)
+                            .map(TypingSession::getAkurasi).orElse(0.0);
+                    if (bestAcc >= val) unlock = true;
                     break;
                 case "TYPING_KILLS":
                     int totalKills = typingSessionRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()

@@ -45,6 +45,14 @@ public class UserController {
     @GetMapping("/admin/users/{id}")
     public ResponseEntity<ApiResponse<?>> getUser(@PathVariable Long id) {
         User u = userRepository.findById(id).orElseThrow(() -> new com.questlearn.exception.ResourceNotFoundException("User tidak ditemukan"));
-        return ResponseEntity.ok(ApiResponse.success(u));
+        // Map to a DTO instead of returning the entity: its bidirectional relations
+        // (User <-> UserProfile, progress, badges) recurse during serialization.
+        Map<String,Object> m = new HashMap<>();
+        m.put("id", u.getId()); m.put("nama", u.getNama()); m.put("email", u.getEmail());
+        m.put("avatarUrl", u.getAvatarUrl());
+        m.put("role", u.getRole().name()); m.put("totalXp", u.getTotalXp());
+        m.put("currentStreak", u.getCurrentStreak()); m.put("longestStreak", u.getLongestStreak());
+        m.put("createdAt", u.getCreatedAt());
+        return ResponseEntity.ok(ApiResponse.success(m));
     }
 }

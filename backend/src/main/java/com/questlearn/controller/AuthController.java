@@ -3,6 +3,7 @@ package com.questlearn.controller;
 import com.questlearn.dto.request.*;
 import com.questlearn.dto.response.ApiResponse;
 import com.questlearn.dto.response.JwtResponse;
+import com.questlearn.entity.User;
 import com.questlearn.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +43,18 @@ public class AuthController {
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<?>> me() {
-        return ResponseEntity.ok(ApiResponse.success(authService.getCurrentUser()));
+        // Return a DTO, not the entity: User has a bidirectional User <-> UserProfile
+        // relation (plus password), which would recurse/leak during JSON serialization.
+        User u = authService.getCurrentUser();
+        java.util.Map<String, Object> data = new java.util.HashMap<>();
+        data.put("id", u.getId());
+        data.put("nama", u.getNama());
+        data.put("email", u.getEmail());
+        data.put("avatarUrl", u.getAvatarUrl());
+        data.put("role", u.getRole().name());
+        data.put("totalXp", u.getTotalXp());
+        data.put("currentStreak", u.getCurrentStreak());
+        data.put("longestStreak", u.getLongestStreak());
+        return ResponseEntity.ok(ApiResponse.success(data));
     }
 }

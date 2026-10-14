@@ -12,7 +12,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     Boolean existsByEmail(String email);
     
-    @Query("SELECT u FROM User u WHERE " +
+    @Query(value = "SELECT u FROM User u WHERE " +
+           "(:search IS NULL OR LOWER(u.nama) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
+           "(:role IS NULL OR u.role = :role)",
+           countQuery = "SELECT COUNT(u) FROM User u WHERE " +
            "(:search IS NULL OR LOWER(u.nama) LIKE LOWER(CONCAT('%', :search, '%')) OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))) AND " +
            "(:role IS NULL OR u.role = :role)")
     Page<User> findWithFilter(String search, User.Role role, Pageable pageable);

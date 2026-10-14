@@ -2,6 +2,8 @@ package com.questlearn.security;
 
 import com.questlearn.entity.User;
 import com.questlearn.repository.UserRepository;
+import io.quarkus.arc.Arc;
+import io.quarkus.arc.ManagedContext;
 import io.quarkus.security.identity.IdentityProviderManager;
 import io.quarkus.security.identity.SecurityIdentity;
 import io.quarkus.security.runtime.QuarkusPrincipal;
@@ -29,28 +31,46 @@ public class JwtAuthMechanism implements HttpAuthenticationMechanism {
 
     @Override
     public Uni<SecurityIdentity> authenticate(RoutingContext context, IdentityProviderManager identityProviderManager) {
-        return Uni.createFrom().emitter(emitter -> {
-            String authHeader = context.request().getHeader("Authorization");
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                emitter.complete(null);
-                return;
-            }
-            String token = authHeader.substring(7);
-            if (!tokenProvider.validateToken(token)) {
-                emitter.complete(null);
-                return;
-            }
-            try {
-                String email = tokenProvider.getEmailFromToken(token);
-                userRepository.findByEmail(email).ifPresentOrElse(
-                        user -> emitter.complete(buildIdentity(user)),
-                        () -> emitter.complete(null)
-                );
-            } catch (Exception e) {
-                log.warn("JWT auth error: {}", e.getMessage());
-                emitter.complete(null);
-            }
-        });
+        String authHeader = context.request().getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return Uni.createFrom().nullItem();
+        }
+        String token = authHeader.substring(7);
+        if (!tokenProvider.validateToken(token)) {
+            return Uni.createFrom().nullItem();
+        }
+        // The user lookup below is a blocking EntityManager operation, which Quarkus
+        // forbids on the Vert.x IO thread; run it on a worker thread instead. A CDI
+        // request context must be active there for the repository to obtain a session.
+        return Uni.createFrom().<SecurityIdentity>emitter(emitter ->
+                context.vertx().<SecurityIdentity>executeBlocking(() -> {
+                    ManagedContext requestContext = Arc.container().requestContext();
+                    boolean activated = !requestContext.isActive();
+                    if (activated) {
+                        requestContext.activate();
+                    }
+                    try {
+                        String email = tokenProvider.getEmailFromToken(token);
+                        return userRepository.findByEmail(email)
+                                .map(this::buildIdentity)
+                                .orElse(null);
+                    } catch (Exception e) {
+                        log.warn("JWT auth error: {}", e.getMessage());
+                        return null;
+                    } finally {
+                        if (activated) {
+                            requestContext.terminate();
+                        }
+                    }
+                }).onComplete(ar -> {
+                    if (ar.succeeded()) {
+                        emitter.complete(ar.result());
+                    } else {
+                        log.warn("JWT auth error: {}", ar.cause().getMessage());
+                        emitter.complete(null);
+                    }
+                })
+        );
     }
 
     @Override
