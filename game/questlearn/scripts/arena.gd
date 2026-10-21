@@ -58,7 +58,6 @@ var emitted := false
 var groups: Array = []
 var pool: Array = []
 var last_word := ""
-var last_right := 0.0
 var locked_id := -1
 var seq := 0
 var world_words: Array = []
@@ -264,7 +263,6 @@ func reset_run() -> void:
 	locked_id = -1
 	pool = []
 	last_word = ""
-	last_right = 0.0
 	lunge = 0.0
 	lunge_target = 0.0
 	jump_offset = 0.0
@@ -424,11 +422,7 @@ func spawn_group(opening := false) -> void:
 	var width: float = float(layout["width"]) + PAD * 2.0
 	var height: float = float(layout["height"])
 	var gap := 40.0 if opening else 74.0
-	var x := HOME_X + 152.0
-	if not opening:
-		x = cam_x + VIEW_W + 40.0
-	for g in groups:
-		x = maxf(x, float(g["x"]) + float(g["width"]) + gap)
+	var x := _next_spawn_x(HOME_X + 152.0 if opening else VIEW_W + 40.0, gap)
 	var tier_max := int(cfg["tier_max"])
 	var by_height := int(floor((GROUND_Y - height - 52.0) / TIER_H))
 	tier_max = clampi(by_height, 0, tier_max)
@@ -490,10 +484,14 @@ func spawn_group(opening := false) -> void:
 	group["node"] = node
 	group["letters"] = letter_nodes
 	groups.append(group)
-	last_right = x + width
+
+func _next_spawn_x(base_x: float, gap: float) -> float:
+	var x := base_x
+	for g in groups:
+		x = maxf(x, float(g["x"]) + float(g["width"]) + gap)
+	return x
 
 func spawn_opening() -> void:
-	last_right = 0.0
 	for i in int(cfg["on_screen"]):
 		spawn_group(true)
 
