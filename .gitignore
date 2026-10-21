@@ -59,3 +59,8 @@ ehthumbs.db
 *.bat
 *.ps1
 !backend/mvnw.cmd
+
+# ---------- Godot game client ----------
+game/questlearn/.godot/
+game/questlearn/build/
+game/questlearn/android/
