@@ -1,0 +1,26 @@
+QuestLearn Typing - Demo Build
+===============================
+
+Run:
+  QuestLearnTyping.exe
+
+Modes:
+  - Guest: play immediately, no backend required. Progress is saved locally.
+  - Account: sign in with siswa@demo.id / demo123 when the Quarkus backend
+    is running at http://localhost:8080/api.
+
+Controls:
+  - Letters / numbers / space: type the highlighted letter.
+  - Enter: start a run; from the result screen, play again.
+  - Esc: pause/resume; go back from menus.
+  - Mouse: menus, SFX mute, pause.
+
+Tips:
+  - Clear the whole word before its cargo reaches the hero.
+  - Accented letters can be typed without accents.
+  - The settings screen supports reduced motion, screen-shake toggle, and a
+    colourblind palette.
+
+Notes:
+  - This is the university demo build. Music is not implemented yet.
+  - Placeholder art and font licences are listed in CREDITS.txt.

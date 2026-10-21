@@ -1,0 +1,32 @@
+QuestLearn Typing
+=================
+
+Game, UI, and gameplay code: QuestLearn team
+Engine: Godot 4.3 (https://godotengine.org)
+Internal resolution: 640x360, nearest-neighbour scaling
+
+Fonts
+-----
+VT323 - Copyright 2011, The VT323 Project Authors (peter.hull@oikoi.com)
+Licensed under the SIL Open Font License 1.1. Full text: art/fonts/OFL-VT323.txt
+
+Press Start 2P - Copyright 2012, The Press Start 2P Project Authors
+(cody@zone38.net), with Reserved Font Name "Press Start 2P".
+Licensed under the SIL Open Font License 1.1. Full text: art/OFL-PressStart2P.txt
+
+Placeholder art
+---------------
+Backgrounds, crates, and hero frames originate from the QuestLearn placeholder
+asset pack in frontend/public/assets. Original source and licence are pending
+confirmation; see ASSET_LICENSES.md before public distribution.
+
+Procedural work
+---------------
+Cliffs, ground, ambient particles, HUD frames, scanlines, vignette, slash arcs,
+floating text, slider styling, and runtime-synthesised SFX are original project
+work.
+
+Demo note
+---------
+This build is intended for the university demo/expo. Music is not implemented.
+The backend is a development configuration (H2, open CORS, demo JWT secret).
