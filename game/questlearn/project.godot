@@ -1,0 +1,47 @@
+; QuestLearn Typing — Godot 4.3 project
+; Engine settings tuned for pixel art: 640x360 internal resolution, nearest
+; neighbour filtering, integer scaling.
+
+config_version=5
+
+[application]
+
+config/name="QuestLearn Typing"
+config/description="Pixel-art typing RPG with language worlds."
+run/main_scene="res://main.tscn"
+config/features=PackedStringArray("4.3", "GL Compatibility")
+config/icon="res://icon.svg"
+boot_splash/bg_color=Color(0.043, 0.075, 0.094, 1)
+config/quit_on_go_back=false
+
+[autoload]
+
+Loc="*res://scripts/loc.gd"
+Profile="*res://scripts/profile.gd"
+Api="*res://scripts/api.gd"
+
+[display]
+
+window/size/viewport_width=640
+window/size/viewport_height=360
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+window/stretch/scale_mode="integer"
+
+[gui]
+
+theme/default_font_antialiasing=0
+theme/default_font_hinting=0
+theme/default_font_subpixel_positioning=0
+theme/default_font_multichannel_signed_distance_field=false
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0
+2d/snap/snap_2d_transforms_to_pixel=true
+2d/snap/snap_2d_vertices_to_pixel=true
+environment/defaults/default_clear_color=Color(0.043, 0.075, 0.094, 1)
