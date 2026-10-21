@@ -2,14 +2,31 @@
 
 > Platform belajar berbasis gamifikasi ala Duolingo — user belajar lewat "Dunia" (kategori mapel), yang terbagi jadi beberapa "Level" berjenjang, dan tiap Level berisi "Quest" (soal-soal) dengan pembahasan. Dilengkapi XP, streak harian, badge, dan leaderboard.
 
-![QuestLearn](https://img.shields.io/badge/Stack-React%20%2B%20Spring%20Boot-orange?style=flat-square)
-![Status](https://img.shields.io/badge/Status-MVP%20Ready-success)
+![QuestLearn](https://img.shields.io/badge/Stack-React%20%2B%20Quarkus%20%2B%20Godot-orange?style=flat-square)
+![Status](https://img.shields.io/badge/Status-Demo%20Ready-success)
+
+---
+
+## 🎮 Game Client (Godot 4)
+
+Arena typing tersedia sebagai game **Godot 4** native (Windows `.exe`) di `game/questlearn`.
+Semua layar game dirender engine Godot — bukan HTML/CSS — dan memakai aset PNG yang sudah ada.
+Game terhubung ke backend yang sama: login JWT, daftar dunia, ambil kata `/typing/start`,
+dan submit hasil `/typing/submit`.
+
+- Build: `game/questlearn/build/windows/QuestLearnTyping.exe`
+- Login demo: `siswa@demo.id` / `demo123`
+- Detail, kontrol, dan cara export: [`game/questlearn/README.md`](game/questlearn/README.md)
+- Test otomatis: `godot --headless --path game/questlearn res://tests/smoke.tscn`
 
 ---
 
 ## 🎯 Fitur Utama (Memenuhi Ketentuan Proyekan S1)
 
 ### Frontend (Client Side)
+- ✅ **6 Dunia Bahasa** — English, Bahasa Indonesia, Español, Français, Deutsch, Português dengan word bank asli tiap bahasa (akurasi tetap ramah keyboard: huruf beraksen bisa diketik tanpa aksen)
+- ✅ **Arena 2D** — versi web tetap punya arena canvas; versi game produksi sekarang memakai **Godot 4** dengan aset PNG asli (background, crate, hero idle/run/jump/slash). Kotak selalu berdiri di atas tanah/tebing, bukan mengambang
+- ✅ **Game Feel Produksi** — game loop delta-time, countdown, pause (Esc), mute (WebAudio), input mobile, target word HUD, combo, screen shake, dan anti-repetisi kata
 - ✅ **Responsive Layout** - Mobile (≤768px), Tablet (769-1024px), Desktop (>1024px) — semua halaman utama pakai Tailwind responsive, tidak overflow
 - ✅ **Authentication Flow Lengkap** - Login, Register, Logout, Forgot Password, Reset Password. JWT disimpan di LocalStorage, session persist saat refresh
 - ✅ **Routing** - Public Route (landing, login), Private Route (dashboard, quest), Role Route (admin panel), Redirect ketika tidak ada hak akses
@@ -41,7 +58,7 @@
 - ✅ **Search, Filter, Pagination API** - Semua endpoint list mendukung ?search=&filter&sort=&page=&limit — contoh: GET /soal?page=0&size=10&search=verb&tingkatKesulitan=MUDAH&sort=createdAt&direction=desc
 
 ### Database
-- Minimal 6 tabel utama, 5 relasi, PK/FK, 3NF (sudah normalized), timestamp created_at/updated_at di BaseEntity, soft delete 2 tabel, seed minimal 20 data per tabel utama (seeder menghasilkan 27 users, 3 dunia, 18 level, 144 soal, 10 badge)
+- Minimal 6 tabel utama, 5 relasi, PK/FK, 3NF (sudah normalized), timestamp created_at/updated_at di BaseEntity, soft delete 2 tabel, seed konten utama (27 users, 6 dunia bahasa, 36 level, 419 kata typing, 14 badge). Tabel kuis pilihan ganda lama tetap ada untuk kompatibilitas API, tetapi tidak lagi diisi karena gameplay sekarang sepenuhnya typing.
 
 ---
 
@@ -49,7 +66,7 @@
 
 ```
 questlearn/
-├── backend/                          # Spring Boot 2.7.18 + Java 11
+├── backend/                          # Quarkus 3.17 + Java 17
 │   ├── src/main/java/com/questlearn/
 │   │   ├── config/                   # SecurityConfig, CorsConfig, OpenApiConfig, DataSeeder
 │   │   ├── controller/               # REST endpoints (Auth, Dunia, Level, Soal, Progress, Badge, User)
@@ -127,24 +144,24 @@ questlearn/
 ## 🚀 Cara Instalasi & Menjalankan
 
 ### Prasyarat
-- Node.js 18+, npm
-- Java 11, Maven 3.8+
-- H2 (embedded, sudah termasuk) atau MySQL/PostgreSQL
+- Node.js 18+, pnpm
+- Java 17, Maven 3.8+ (atau memakai `backend/mvnw.cmd`)
+- Godot 4.3 + export templates (untuk game client)
+- H2 (embedded, sudah termasuk)
 
-### Backend (Spring Boot)
+### Backend (Quarkus)
 ```bash
 cd backend
-# build
-/tmp/maven/bin/mvn clean install -DskipTests
+# dev mode dengan hot reload
+./mvnw quarkus:dev
+# Windows: mvnw.cmd quarkus:dev
 
-# run (H2 file-based)
-java -jar target/questlearn-backend-0.0.1-SNAPSHOT.jar
-
-# atau via maven
-/tmp/maven/bin/mvn spring-boot:run
+# build produksi
+./mvnw clean package
+java -jar target/quarkus-app/quarkus-run.jar
 ```
 - API: http://localhost:8080/api/*
-- Swagger: http://localhost:8080/swagger-ui.html
+- Swagger UI: http://localhost:8080/q/swagger-ui/
 - H2 Console: http://localhost:8080/h2-console (jdbc:h2:file:./data/questlearn)
 
 ### Frontend (React + Vite)
@@ -179,16 +196,21 @@ pnpm build
 
 ## 📊 Scope Konten (Seed Data)
 
-**3 Dunia:**
-1. **Bahasa Inggris** — 6 level: Vocab Dasar, Simple Present, Vocab Menengah, Simple Past, Listening Dasar, Grammar Campuran (boss)
-2. **Matematika Dasar** — 6 level: Operasi Dasar, Perkalian & Pembagian, Pecahan, Aljabar Sederhana, Bangun Datar, Soal Cerita (boss)
-3. **Logika & Pengetahuan Umum** — 6 level: Pola & Urutan, Sebab-Akibat, Teka-teki Deduksi, Pengetahuan Umum, Analisis Pernyataan, Campuran (boss)
+**6 Dunia Bahasa** — arena typing 2D dengan konten asli tiap bahasa:
+1. **English** 🇬🇧 — 30 kata mudah, 25 frasa, 15 kalimat
+2. **Bahasa Indonesia** 🇮🇩 — 30 kata mudah, 24 frasa, 15 kalimat
+3. **Español** 🇪🇸 — 30 kata mudah, 25 frasa, 15 kalimat
+4. **Français** 🇫🇷 — 30 kata mudah, 25 frasa, 15 kalimat
+5. **Deutsch** 🇩🇪 — 30 kata mudah, 25 frasa, 15 kalimat
+6. **Português** 🇵🇹 — 30 kata mudah, 25 frasa, 15 kalimat
 
-**Per Level: 8 Soal** → Total **144 Soal** (memenuhi seed minimal 20 per tabel)
+**Total 419 kata/frasa/kalimat** di tabel `typing_words`, dibagi 3 tingkat kesulitan (EASY/MEDIUM/HARD).
 
-**Minimal lulus:** 70% untuk buka level selanjutnya
+Setiap dunia punya 6 chapter (First Words → Boss: Full Sentences) untuk struktur progres & admin.
 
-**Badge:** 10 badge otomatis unlock (First Step, Streak 3/7, XP 100/500, Level 5/10, Perfect Score, dll)
+**Badge:** 14 badge otomatis unlock (First Step, Streak 3/7, XP 100/500, WPM 20/40/60, Akurasi 95%, 100 kotak, Polyglot, dll).
+
+> Konten kuis pilihan ganda lama sudah tidak dipakai di gameplay. Arena sekarang 100% typing.
 
 ---
 
@@ -301,15 +323,17 @@ Lihat file `docs/erd/ERD.md` untuk detail.
 - README lengkap (ini)
 - Akun demo tercantum
 - Flowchart & ERD di /docs
-- Seed data 144 soal otomatis saat pertama run
+- Seed data 6 dunia bahasa + 419 kata typing + 36 chapter otomatis saat pertama run
 - Deadline: Jumat, 18 September 2026, 22.00 WIB — **Sudah Ready**
 
 ---
 
 ## 👨‍💻 Tech Stack
 
+- **Game client:** Godot 4.3 (GDScript, GL Compatibility), 640x360 pixel-art canvas
 - **Frontend:** React 18 + TypeScript + Tailwind CSS + React Router + Axios
-- **Backend:** Java 11 + Spring Boot 2.7.18 + Spring Security + JWT (jjwt 0.11.5) + Spring Data JPA + H2 (prod bisa MySQL/PostgreSQL) + Lombok + springdoc-openapi
+- **Backend:** Java 17 + Quarkus 3.17.5 + JWT (jjwt 0.11.5) + Hibernate ORM + H2 + Lombok + SmallRye OpenAPI
+- **Game backend contract:** `/api/auth/login`, `/api/dunia/user`, `/api/typing/start`, `/api/typing/submit`
 - **Database:** H2 (embedded) untuk dev, MySQL/PostgreSQL ready via driver
 - **Upload:** Local folder ./uploads + endpoint statis /uploads/**
 
