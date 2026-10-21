@@ -1,42 +1,37 @@
-export type DifficultyLevel = 'EASY' | 'MEDIUM' | 'HARD';
+import type { DifficultyLevel } from '../types/typing.types'
 
+/**
+ * Difficulty tuning. Speeds are expressed as a fraction of the viewport width
+ * per second so the pacing feels identical on a phone and on a desktop.
+ */
 export interface DifficultyConfig {
-  maxEn: number;
-  waveSz: number;
-  dashSpd: number;
-  spawnGap: number;
-  enemySpd: number;
-  worldSpd: number;
-  onScreen: number;
-  hearts: number;
+  /** Maximum number of crate groups alive at once. */
+  onScreen: number
+  hearts: number
+  /** Camera speed in viewport-widths per second. */
+  worldSpeed: number
+  /** Minimum gap between two platforms, in viewport widths. */
+  gapRatio: number
+  /** 0 = ground only, 1 = low cliffs, 2 = high cliffs. */
+  tierMax: number
+  /** Word groups that spawn in the opening screen. */
+  openingGroups: number
 }
 
-export const GAME_CONSTANTS = {
-  LETTER_SPACING: 110,
-  MIN_ENEMY_GAP: 160,
-};
-
 export const CFG: Record<DifficultyLevel, DifficultyConfig> = {
-  EASY: { maxEn: 4, waveSz: 10, dashSpd: 220, spawnGap: 350, enemySpd: 85, worldSpd: 45, onScreen: 3, hearts: 6 },
-  MEDIUM: { maxEn: 6, waveSz: 16, dashSpd: 260, spawnGap: 280, enemySpd: 115, worldSpd: 60, onScreen: 3, hearts: 5 },
-  HARD: { maxEn: 10, waveSz: 24, dashSpd: 300, spawnGap: 220, enemySpd: 135, worldSpd: 70, onScreen: 4, hearts: 4 },
-};
+  EASY: { onScreen: 3, hearts: 5, worldSpeed: 0.045, gapRatio: 0.12, tierMax: 1, openingGroups: 3 },
+  MEDIUM: { onScreen: 3, hearts: 4, worldSpeed: 0.058, gapRatio: 0.11, tierMax: 2, openingGroups: 3 },
+  HARD: { onScreen: 4, hearts: 3, worldSpeed: 0.072, gapRatio: 0.1, tierMax: 2, openingGroups: 4 },
+}
 
-export const THEMES: Record<number, { bgFile: string; boxFile: string }> = {
-  1: { bgFile: '/assets/village-960x360.png', boxFile: '/assets/crate-blank-32-removebg-preview.png' },
-  2: { bgFile: '/assets/desert-ruins-960x360.png', boxFile: '/assets/sandstone-block-32-removebg-preview.png' },
-  3: { bgFile: '/assets/forest-runes-960x360.png', boxFile: '/assets/mossy-crate-32-removebg-preview.png' },
-};
+export const DURATION_OPTIONS: { value: 30 | 60 | 300; labelEn: string; labelId: string }[] = [
+  { value: 30, labelEn: '30 sec', labelId: '30 detik' },
+  { value: 60, labelEn: '1 min', labelId: '1 menit' },
+  { value: 300, labelEn: '5 min', labelId: '5 menit' },
+]
 
-export const GROUND_RATIO: Record<number, number> = {
-  1: 0.82,
-  2: 0.8,
-  3: 0.84,
-};
-
-export const ANIM = {
-  idle: { pre: 'idle_', cnt: 4 },
-  run: { pre: 'run_', cnt: 7 },
-  jump: { pre: 'jump_', cnt: 2 },
-  slash: { pre: 'sword_slash_attack_', cnt: 7 },
-};
+/** Deterministic pseudo-random helper used by the terrain renderer. */
+export function hash01(seed: number): number {
+  const x = Math.sin(seed * 127.1 + 311.7) * 43758.5453
+  return x - Math.floor(x)
+}

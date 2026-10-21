@@ -12,11 +12,10 @@ import {
   Trophy,
   Medal,
   Crown,
-  Globe,
-  Calculator,
-  Brain,
   Swords,
+  Languages,
 } from 'lucide-react'
+import { WORLD_DEFS } from '../../config/worlds'
 
 export const DashboardPage: React.FC = () => {
   const [data, setData] = useState<Dashboard | null>(null)
@@ -32,7 +31,7 @@ export const DashboardPage: React.FC = () => {
           currentStreak: 3,
           longestStreak: 5,
           completedLevels: 3,
-          totalLevels: 18,
+          totalLevels: 36,
           totalBadges: 3,
           continueLearning: [
             { id: 1, nama: 'Target 40 WPM', deskripsi: 'Capai 40 kata per menit di Easy' },
@@ -122,18 +121,20 @@ export const DashboardPage: React.FC = () => {
             ))}
           </div>
 
-          <h2 className="font-pixel text-[11px] text-pixel-cream mt-8">PILIH DUNIA TYPING</h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            {[
-              { id: 1, nama: 'Bahasa Inggris', deskripsi: 'Kata & frasa Inggris', color: '#B5533C', icon: <Globe size={32} /> },
-              { id: 2, nama: 'Matematika Dasar', deskripsi: 'Angka & persamaan', color: '#D9A24B', icon: <Calculator size={32} /> },
-              { id: 3, nama: 'Logika & Umum', deskripsi: 'Teka-teki & logika', color: '#6FCF6F', icon: <Brain size={32} /> },
-            ].map((d) => (
-              <Link key={d.id} to="/typing" className="group">
-                <div className="pixel-panel p-4 h-full pixel-card-hover cursor-pointer transition-all">
-                  <div className="mb-3 flex justify-center" style={{ color: d.color }}>{d.icon}</div>
-                  <h3 className="font-pixel text-[9px] text-pixel-cream">{d.nama}</h3>
-                  <p className="font-vt text-base text-pixel-cream/40 mt-1">{d.deskripsi}</p>
+          <div className="flex justify-between items-center mt-8 mb-3">
+            <h2 className="font-pixel text-[11px] text-pixel-cream">PILIH DUNIA TYPING</h2>
+            <span className="font-pixel text-[7px] text-pixel-cream/30 flex items-center gap-1.5">
+              <Languages size={11} /> 6 BAHASA
+            </span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {WORLD_DEFS.map((w) => (
+              <Link key={w.slug} to="/typing" className="group">
+                <div className="pixel-panel p-4 h-full pixel-card-hover cursor-pointer transition-all relative overflow-hidden">
+                  <span className="absolute inset-x-0 top-0 h-1" style={{ backgroundColor: w.color }} />
+                  <div className="mb-2 text-3xl">{w.flag}</div>
+                  <h3 className="font-pixel text-[9px] text-pixel-cream">{w.nativeName}</h3>
+                  <p className="font-vt text-base text-pixel-cream/40 mt-1 leading-snug">{w.description}</p>
                 </div>
               </Link>
             ))}

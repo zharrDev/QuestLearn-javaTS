@@ -2,16 +2,17 @@ import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { LeaderboardEntry } from '../../types/leaderboard.types'
 import { typingService } from '../../services/typing.service'
+import { duniaService } from '../../services/dunia.service'
+import { WORLD_BY_SLUG, WORLD_DEFS } from '../../config/worlds'
 import { Crown, Medal, Award } from 'lucide-react'
 
-type Filter = 'all' | 1 | 2 | 3
+type Filter = 'all' | number
 
-const DUNIA_FILTERS: { value: Filter; label: string }[] = [
-  { value: 'all', label: 'SEMUA' },
-  { value: 1, label: 'INGGRIS' },
-  { value: 2, label: 'MATEMATIKA' },
-  { value: 3, label: 'LOGIKA' },
-]
+interface FilterOption {
+  value: number
+  label: string
+  flag: string
+}
 
 const RankIcon: React.FC<{ rank: number }> = ({ rank }) => {
   if (rank === 1) return <Crown size={14} className="inline-block text-pixel-amber" />
@@ -22,8 +23,28 @@ const RankIcon: React.FC<{ rank: number }> = ({ rank }) => {
 
 export const LeaderboardPage: React.FC = () => {
   const [filter, setFilter] = useState<Filter>('all')
+  const [filters, setFilters] = useState<FilterOption[]>([])
   const [data, setData] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    duniaService
+      .getAllForUser()
+      .then((res) => {
+        const list = res.data?.data || res.data || []
+        if (!Array.isArray(list)) return
+        const mapped = list
+          .map((d: { id: number; slug: string; nama: string; isActive?: boolean }) => {
+            const def = WORLD_BY_SLUG[d.slug]
+            return def && d.isActive !== false ? { value: d.id, label: def.name.toUpperCase(), flag: def.flag } : null
+          })
+          .filter((o): o is FilterOption => o !== null)
+        if (mapped.length > 0) setFilters(mapped)
+      })
+      .catch(() => {
+        setFilters(WORLD_DEFS.map((def, index) => ({ value: index + 1, label: def.name.toUpperCase(), flag: def.flag })))
+      })
+  }, [])
 
   useEffect(() => {
     setLoading(true)
@@ -40,15 +61,25 @@ export const LeaderboardPage: React.FC = () => {
         <h1 className="font-pixel text-[16px] text-pixel-cream text-shadow-pixel">LEADERBOARD</h1>
         <p className="font-vt text-xl text-pixel-cream/50 mt-2">Peringkat berdasarkan WPM terbaik tiap pemain</p>
         <div className="mt-4 inline-flex flex-wrap justify-center gap-1 bg-pixel-panel border-2 border-[#2A3444] p-1">
-          {DUNIA_FILTERS.map((f) => (
+          <button
+            type="button"
+            onClick={() => setFilter('all')}
+            className={`px-3 py-1.5 font-pixel text-[8px] transition ${
+              filter === 'all' ? 'bg-pixel-amber text-pixel-navy' : 'text-pixel-cream/50 hover:text-pixel-cream'
+            }`}
+          >
+            ALL
+          </button>
+          {filters.map((f) => (
             <button
-              key={String(f.value)}
+              key={f.value}
+              type="button"
               onClick={() => setFilter(f.value)}
               className={`px-3 py-1.5 font-pixel text-[8px] transition ${
                 filter === f.value ? 'bg-pixel-amber text-pixel-navy' : 'text-pixel-cream/50 hover:text-pixel-cream'
               }`}
             >
-              {f.label}
+              {f.flag} {f.label}
             </button>
           ))}
         </div>

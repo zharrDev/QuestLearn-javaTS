@@ -3,9 +3,12 @@ import { Badge } from '../types/badge.types'
 import { LeaderboardEntry } from '../types/leaderboard.types'
 
 export const mockDunia: Dunia[] = [
-  { id: 1, nama: "Bahasa Inggris", slug: "bahasa-inggris", deskripsi: "Kuasai vocabulary dan tata bahasa Inggris", backgroundColor: "#D97757", urutan: 1, isActive: true, totalLevel: 6, completedLevel: 2, iconUrl: "globe", createdAt: new Date().toISOString() },
-  { id: 2, nama: "Matematika Dasar", slug: "matematika-dasar", deskripsi: "Asah kemampuan berhitung dan logika numerik", backgroundColor: "#2C5F5D", urutan: 2, isActive: true, totalLevel: 6, completedLevel: 0, iconUrl: "calculator", createdAt: new Date().toISOString() },
-  { id: 3, nama: "Logika & Pengetahuan Umum", slug: "logika-pengetahuan-umum", deskripsi: "Tingkatkan kemampuan berpikir kritis dan deduksi", backgroundColor: "#E8A93B", urutan: 3, isActive: true, totalLevel: 6, completedLevel: 1, iconUrl: "brain", createdAt: new Date().toISOString() },
+  { id: 1, nama: "English", slug: "bahasa-inggris", deskripsi: "Type English words, phrases and everyday sentences", backgroundColor: "#4C7A5E", urutan: 1, isActive: true, totalLevel: 6, completedLevel: 2, iconUrl: "🇬🇧", createdAt: new Date().toISOString() },
+  { id: 2, nama: "Bahasa Indonesia", slug: "bahasa-indonesia", deskripsi: "Ketik kata, frasa dan kalimat bahasa Indonesia", backgroundColor: "#D97757", urutan: 2, isActive: true, totalLevel: 6, completedLevel: 0, iconUrl: "🇮🇩", createdAt: new Date().toISOString() },
+  { id: 3, nama: "Español", slug: "bahasa-spanyol", deskripsi: "Escribe palabras, frases y oraciones en español", backgroundColor: "#D98E3B", urutan: 3, isActive: true, totalLevel: 6, completedLevel: 1, iconUrl: "🇪🇸", createdAt: new Date().toISOString() },
+  { id: 4, nama: "Français", slug: "bahasa-prancis", deskripsi: "Tapez des mots, des phrases et des textes en français", backgroundColor: "#8A7BC8", urutan: 4, isActive: true, totalLevel: 6, completedLevel: 0, iconUrl: "🇫🇷", createdAt: new Date().toISOString() },
+  { id: 5, nama: "Deutsch", slug: "bahasa-jerman", deskripsi: "Tippe deutsche Wörter, Sätze und Alltagstexte", backgroundColor: "#4A7BA8", urutan: 5, isActive: true, totalLevel: 6, completedLevel: 0, iconUrl: "🇩🇪", createdAt: new Date().toISOString() },
+  { id: 6, nama: "Português", slug: "bahasa-portugis", deskripsi: "Digite palavras, frases e textos em português", backgroundColor: "#2E9AA8", urutan: 6, isActive: true, totalLevel: 6, completedLevel: 0, iconUrl: "🇵🇹", createdAt: new Date().toISOString() },
 ]
 
 export const mockBadges: Badge[] = [

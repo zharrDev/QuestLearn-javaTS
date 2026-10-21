@@ -1,24 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '../components/common/Button'
-import {
-  Crosshair,
-  MessageSquare,
-  Trophy,
-  ArrowRight,
-  Sparkles,
-  Globe,
-  Calculator,
-  Brain,
-  Swords,
-  Target,
-} from 'lucide-react'
+import { Crosshair, MessageSquare, Trophy, ArrowRight, Sparkles, Globe2, Swords } from 'lucide-react'
+import { WORLD_DEFS } from '../config/worlds'
 
-const SLIDES = [
-  { image: 'public/assets/bg-english-village.png', label: 'Bahasa Inggris' },
-  { image: 'public/assets/bg-math-desert.png', label: 'Matematika Dasar' },
-  { image: 'public/assets/bg-logic-forest.png', label: 'Logika & Pengetahuan' },
-]
+const SLIDES = WORLD_DEFS.map((world) => ({
+  label: world.nativeName,
+  flag: world.flag,
+  gradient: `linear-gradient(160deg, ${world.palette.skyTop} 0%, ${world.palette.skyBottom} 52%, ${world.palette.near} 100%)`,
+}))
 
 const SLIDE_DURATION = 4500
 
@@ -39,14 +29,12 @@ export const LandingPage: React.FC = () => {
           <div
             key={idx}
             className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
-            style={{ opacity: idx === currentSlide ? 1 : 0 }}
+            style={{ opacity: idx === currentSlide ? 1 : 0, background: slide.gradient }}
           >
-            <img
-              src={slide.image}
-              alt={slide.label}
-              className="w-full h-full object-cover"
-              style={{ imageRendering: 'pixelated' }}
-            />
+            <div className="absolute right-[6%] top-[18%] text-[180px] lg:text-[280px] leading-none opacity-20 select-none">
+              {slide.flag}
+            </div>
+            <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#141B22] to-transparent" />
           </div>
         ))}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-pixel-bg" />
@@ -56,16 +44,16 @@ export const LandingPage: React.FC = () => {
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-pixel-amber/10 border-2 border-pixel-amber/30 font-pixel text-[8px] text-pixel-amber tracking-wider">
               <Sparkles size={12} />
-              TYPING COMBAT GAME 3D
+              TYPING COMBAT GAME 2D · 6 BAHASA
             </div>
             <h1 className="font-pixel text-[20px] lg:text-[28px] text-pixel-cream leading-[2] mt-8 text-shadow-pixel">
               Latihan mengetik jadi<br />pertarungan epik<br />
-              <span className="text-pixel-amber">3D!</span>
+              <span className="text-pixel-amber">2D!</span>
             </h1>
             <p className="font-vt text-2xl text-pixel-cream/70 mt-6 leading-relaxed max-w-[520px]">
-              Bukan latihan ngetik biasa. Ketik kata untuk menebas musuh,
-              kumpulkan XP, kejar WPM tertinggi, dan buktikan kamu
-              pengetik tercepat!
+              Pilih bahasamu — Inggris, Indonesia, Spanyol, Prancis, Jerman, atau Portugis —
+              lalu tebas kotak huruf dengan ketikan cepat. Kumpulkan XP, kejar WPM tertinggi,
+              dan buktikan kamu pengetik tercepat di dunia!
             </p>
             <div className="mt-8 flex gap-3">
               <Link to="/register">
@@ -86,7 +74,7 @@ export const LandingPage: React.FC = () => {
                 ))}
               </div>
               <p className="font-vt text-lg text-pixel-cream/50">
-                <span className="text-pixel-cream">1.2k+</span> pemain aktif
+                <span className="text-pixel-cream">6 bahasa</span> siap dimainkan
               </p>
             </div>
           </div>
@@ -103,29 +91,29 @@ export const LandingPage: React.FC = () => {
               </div>
               <div className="mt-6 space-y-3">
                 {[
-                  { label: 'WPM Tertinggi', value: '72', color: 'green' },
-                  { label: 'Akurasi Terbaik', value: '98%', color: 'blue' },
-                  { label: 'Total Musuh Kalah', value: '1,247', color: 'amber' },
-                  { label: 'Combo Terpanjang', value: '45x', color: 'coral' },
+                  { label: 'Bahasa Dunia', value: '6', color: '#6FCF6F' },
+                  { label: 'Tingkat Kesulitan', value: '3', color: '#8FC1D9' },
+                  { label: 'Kata & Frasa', value: '419', color: '#E8A93B' },
+                  { label: 'Aset Gambar Eksternal', value: '0', color: '#E37B6B' },
                 ].map((s, i) => (
                   <div key={i} className="flex items-center justify-between p-3 border-2 border-pixel-cream/10 bg-pixel-dark/30">
                     <span className="font-pixel text-[8px] text-pixel-cream/60">{s.label}</span>
-                    <span className={`font-pixel text-[10px] text-pixel-${s.color}`}>{s.value}</span>
+                    <span className="font-pixel text-[10px]" style={{ color: s.color }}>{s.value}</span>
                   </div>
                 ))}
               </div>
             </div>
             <div className="absolute -bottom-6 -left-6 pixel-panel bg-pixel-green/10 border-pixel-green/40 p-4 rotate-[-3deg] max-w-[200px]">
               <p className="font-pixel text-[7px] text-pixel-green/70">
-                STREAK 7 HARI!
+                MAP PROCEDURAL
               </p>
               <p className="font-vt text-base text-pixel-cream mt-1">
-                Jangan putus streak-mu!
+                Tebing, karakter & kotak digambar sendiri.
               </p>
             </div>
             <div className="absolute -top-4 -right-4 pixel-panel bg-pixel-amber/20 border-pixel-amber/40 px-4 py-2 rotate-3">
               <span className="font-pixel text-[8px] text-pixel-amber">
-                +120 XP!
+                +XP SETIAP SESI
               </span>
             </div>
           </div>
@@ -162,7 +150,7 @@ export const LandingPage: React.FC = () => {
               {
                 icon: <MessageSquare size={28} className="text-pixel-green" />,
                 title: 'Latihan Efektif',
-                desc: 'Lawan kata/kalimat dari 3 dunia berbeda. Ukur WPM dan akurasi secara real-time. Cocok untuk semua level kemampuan.',
+                desc: 'Lawan kata/kalimat dari 6 bahasa dunia. Ukur WPM dan akurasi secara real-time. Cocok untuk semua level kemampuan.',
               },
               {
                 icon: <Trophy size={28} className="text-pixel-coral" />,
@@ -181,36 +169,20 @@ export const LandingPage: React.FC = () => {
       </section>
 
       <section className="max-w-7xl mx-auto px-6 py-16">
-        <h2 className="font-pixel text-[14px] text-pixel-cream text-shadow-pixel">
-          3 Dunia dengan tema kata berbeda
-        </h2>
-        <div className="grid md:grid-cols-3 gap-6 mt-8">
-          {[
-            {
-              icon: <Globe size={32} />,
-              name: 'Desa Inggris',
-              desc: 'Kata & frasa bahasa Inggris umum',
-              color: '#B5533C',
-            },
-            {
-              icon: <Calculator size={32} />,
-              name: 'Gurun Matematika',
-              desc: 'Angka, simbol, dan persamaan',
-              color: '#D9A24B',
-            },
-            {
-              icon: <Brain size={32} />,
-              name: 'Hutan Logika',
-              desc: 'Teka-teki dan istilah logika',
-              color: '#6FCF6F',
-            },
-          ].map((d) => (
-            <div key={d.name} className="pixel-panel p-0 overflow-hidden pixel-card-hover cursor-pointer transition-all">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <h2 className="font-pixel text-[14px] text-pixel-cream text-shadow-pixel flex items-center gap-2">
+            <Globe2 size={20} className="text-pixel-amber" /> 6 Dunia Bahasa dari Seluruh Dunia
+          </h2>
+          <span className="font-pixel text-[7px] text-pixel-cream/35">LEBIH BANYAK BAHASA SEGERA</span>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+          {WORLD_DEFS.map((d) => (
+            <div key={d.slug} className="pixel-panel p-0 overflow-hidden pixel-card-hover cursor-pointer transition-all">
               <div className="h-2" style={{ backgroundColor: d.color }} />
               <div className="p-5">
-                <div className="mb-3" style={{ color: d.color }}>{d.icon}</div>
-                <h3 className="font-pixel text-[11px] text-pixel-cream">{d.name}</h3>
-                <p className="font-vt text-lg text-pixel-cream/50 mt-2">{d.desc}</p>
+                <div className="mb-3 text-3xl">{d.flag}</div>
+                <h3 className="font-pixel text-[11px] text-pixel-cream">{d.nativeName}</h3>
+                <p className="font-vt text-lg text-pixel-cream/50 mt-2">{d.description}</p>
                 <p className="font-pixel text-[7px] mt-4" style={{ color: d.color }}>
                   3 LEVEL KESULITAN
                 </p>

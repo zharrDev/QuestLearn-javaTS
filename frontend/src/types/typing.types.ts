@@ -11,6 +11,7 @@ export interface TypingStartResponse {
   totalWords: number;
   level: string;
   duniaNama: string;
+  duniaSlug?: string;
   duniaId: number;
 }
 

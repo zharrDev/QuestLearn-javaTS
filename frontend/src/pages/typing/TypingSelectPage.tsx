@@ -1,181 +1,278 @@
-import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { ArrowLeft, Globe2, Keyboard, Check, Swords, Target, Zap } from 'lucide-react'
 import { typingService } from '../../services/typing.service'
 import { duniaService } from '../../services/dunia.service'
 import type { Dunia } from '../../types/dunia.types'
 import type { TypingStartResponse, DifficultyLevel } from '../../types/typing.types'
-import { Globe, Calculator, Brain, Swords, Target, Zap } from 'lucide-react'
+import { DURATION_OPTIONS } from '../../config/game.config'
+import { WORLD_DEFS, WORLD_BY_SLUG, fallbackWords, type WorldDef } from '../../config/worlds'
+import { useUiLang, uiText, type UiLang } from '../../config/i18n'
 
 type DurationOption = 30 | 60 | 300
 
-const difficultyConfig: Record<DifficultyLevel, { label: string; desc: string; color: string }> = {
-  EASY: { label: 'Easy', desc: '3-5 huruf, lambat', color: '#4ade80' },
-  MEDIUM: { label: 'Medium', desc: '5-8 huruf, sedang', color: '#fbbf24' },
-  HARD: { label: 'Hard', desc: 'Kalimat, cepat', color: '#ff4444' },
+interface WorldOption {
+  id: number
+  def: WorldDef
 }
 
-const durationOptions: { value: DurationOption; label: string }[] = [
-  { value: 30, label: '30 detik' },
-  { value: 60, label: '1 menit' },
-  { value: 300, label: '5 menit' },
-]
-
-const duniaIcons: Record<number, React.ReactNode> = {
-  1: <Globe size={40} className="text-village-terracotta" />,
-  2: <Calculator size={40} className="text-desert-sand" />,
-  3: <Brain size={40} className="text-forest-lantern" />,
+const difficultyCopy: Record<
+  DifficultyLevel,
+  { key: 'easy' | 'medium' | 'hard'; descKey: 'easyDesc' | 'mediumDesc' | 'hardDesc'; color: string }
+> = {
+  EASY: { key: 'easy', descKey: 'easyDesc', color: '#6FCF6F' },
+  MEDIUM: { key: 'medium', descKey: 'mediumDesc', color: '#E8A93B' },
+  HARD: { key: 'hard', descKey: 'hardDesc', color: '#E37B6B' },
 }
 
-const mockDunias: Dunia[] = [
-  { id: 1, nama: "Bahasa Inggris", slug: "bahasa-inggris", deskripsi: "Kata & frasa bahasa Inggris", backgroundColor: "#D97757", urutan: 1, isActive: true, iconUrl: "globe" },
-  { id: 2, nama: "Matematika Dasar", slug: "matematika-dasar", deskripsi: "Angka, simbol & persamaan", backgroundColor: "#2C5F5D", urutan: 2, isActive: true, iconUrl: "calculator" },
-  { id: 3, nama: "Logika & Umum", slug: "logika-umum", deskripsi: "Teka-teki & istilah logika", backgroundColor: "#E8A93B", urutan: 3, isActive: true, iconUrl: "brain" },
-]
+function fallbackOptions(): WorldOption[] {
+  // Same order as the backend seed (English first) so the default selection is
+  // stable in offline and online modes.
+  return WORLD_DEFS.map((def, index) => ({ id: index + 1, def }))
+}
 
 export default function TypingSelectPage() {
-  const [dunias, setDunias] = useState<Dunia[]>(mockDunias)
-  const [selectedDunia, setSelectedDunia] = useState<Dunia | null>(null)
+  const [lang, setLang] = useUiLang()
+  const t = uiText(lang)
+  const [options, setOptions] = useState<WorldOption[]>(fallbackOptions)
+  const [selected, setSelected] = useState<WorldOption | null>(null)
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('EASY')
   const [durationSec, setDurationSec] = useState<DurationOption>(60)
   const [loading, setLoading] = useState(false)
+  const [starting, setStarting] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
-    duniaService.getAllForUser().then(res => {
-      const data = res.data?.data || res.data || []
-      if (Array.isArray(data) && data.length > 0) {
-        setDunias(data)
-      }
-    }).catch(() => {})
+    setLoading(true)
+    duniaService
+      .getAllForUser()
+      .then((res) => {
+        const data: Dunia[] = res.data?.data || res.data || []
+        if (!Array.isArray(data) || data.length === 0) return
+        const mapped = data
+          .map((d) => {
+            const def = WORLD_BY_SLUG[d.slug]
+            return def && d.isActive !== false ? { id: d.id, def } : null
+          })
+          .filter((o): o is WorldOption => o !== null)
+        if (mapped.length > 0) {
+          setOptions(mapped)
+          // The first render uses the offline catalog, whose numeric ids may not
+          // match the database. Re-select by slug so the highlighted world and
+          // the world that actually starts always agree.
+          setSelected((prev) => {
+            if (!prev) return mapped[0]
+            return mapped.find((o) => o.def.slug === prev.def.slug) || mapped[0]
+          })
+        }
+      })
+      .catch(() => {
+        // Offline / demo mode: the catalog and word banks still work.
+        setOptions(fallbackOptions())
+      })
+      .finally(() => setLoading(false))
   }, [])
 
+  // Keep a selection even if the API payload arrives after the first render.
+  useEffect(() => {
+    if (!selected && options.length > 0) setSelected(options[0])
+  }, [options, selected])
+
+  const selectedWorld = selected?.def
+  const worldHint = useMemo(
+    () => (selectedWorld ? selectedWorld.description : t.pickWorldFirst),
+    [selectedWorld, t.pickWorldFirst],
+  )
+
   const handleStart = async () => {
-    if (!selectedDunia) return
-    setLoading(true)
+    if (!selected || starting) return
+    setStarting(true)
     try {
-      const data = await typingService.startSession(selectedDunia.id, difficulty)
-      navigate(`/typing/arena`, { state: { session: data, difficulty, durationSec } })
-    } catch {
-      const mockWords = getMockWords(selectedDunia.id, difficulty)
-      const mockSession: TypingStartResponse = {
-        sessionId: Date.now(),
-        words: mockWords,
-        totalWords: mockWords.length,
-        level: difficulty,
-        duniaNama: selectedDunia.nama,
-        duniaId: selectedDunia.id,
+      const data = await typingService.startSession(selected.id, difficulty)
+      const session: TypingStartResponse = {
+        ...data,
+        duniaSlug: data.duniaSlug || selected.def.slug,
+        duniaNama: data.duniaNama || selected.def.nativeName,
+        duniaId: data.duniaId || selected.id,
       }
-      navigate(`/typing/arena`, { state: { session: mockSession, difficulty, durationSec } })
+      navigate('/typing/arena', { state: { session, difficulty, durationSec } })
+    } catch {
+      const words = fallbackWords(selected.def, difficulty)
+      const session: TypingStartResponse = {
+        sessionId: Date.now(),
+        words,
+        totalWords: words.length,
+        level: difficulty,
+        duniaNama: selected.def.nativeName,
+        duniaSlug: selected.def.slug,
+        duniaId: selected.id,
+      }
+      navigate('/typing/arena', { state: { session, difficulty, durationSec } })
     } finally {
-      setLoading(false)
+      setStarting(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white font-pixel p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl text-green-400 mb-2 flex items-center justify-center gap-3" style={{ fontFamily: '"Press Start 2P", monospace' }}>
-            <Swords size={32} className="text-green-400" /> Typing Strike
-          </h1>
-          <p className="text-gray-400" style={{ fontFamily: '"Press Start 2P", monospace' }}>Side-scroller 2D — ketik cepat, tebas kotak huruf!</p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
-          {dunias.map(d => (
-            <button
-              key={d.id}
-              onClick={() => setSelectedDunia(d)}
-              className={`p-6 rounded-lg border-2 text-center transition-all ${
-                selectedDunia?.id === d.id
-                  ? 'border-green-400 bg-green-900/30 scale-105'
-                  : 'border-gray-700 bg-gray-800 hover:border-gray-500'
-              }`}
-            >
-              <div className="mb-3 flex justify-center">
-                {duniaIcons[d.id] || <Globe size={40} />}
-              </div>
-              <div className="font-bold text-lg" style={{ fontFamily: '"Press Start 2P", monospace' }}>{d.nama}</div>
-              <div className="text-xs text-gray-400 mt-1" style={{ fontFamily: '"Press Start 2P", monospace' }}>{d.deskripsi}</div>
-            </button>
-          ))}
-        </div>
-
-        <div className="bg-gray-800 rounded-lg p-6 mb-8">
-          <h2 className="text-xl mb-4 text-center" style={{ fontFamily: '"Press Start 2P", monospace' }}>Pilih Tingkat Kesulitan</h2>
-          <div className="flex gap-4 justify-center">
-            {(Object.entries(difficultyConfig) as [DifficultyLevel, typeof difficultyConfig['EASY']][]).map(([key, cfg]) => (
-              <button
-                key={key}
-                onClick={() => setDifficulty(key)}
-                className={`px-6 py-3 rounded-lg border-2 transition-all ${
-                  difficulty === key
-                    ? 'border-white bg-gray-700 scale-105'
-                    : 'border-gray-600 bg-gray-700/50 hover:border-gray-400'
-                }`}
-              >
-                <div className="font-bold flex items-center gap-2 justify-center" style={{ color: cfg.color, fontFamily: '"Press Start 2P", monospace' }}>
-                  {key === 'EASY' && <Target size={14} />}
-                  {key === 'MEDIUM' && <Zap size={14} />}
-                  {key === 'HARD' && <Zap size={14} className="text-red-400" />}
-                  {cfg.label}
-                </div>
-                <div className="text-xs text-gray-400 mt-1" style={{ fontFamily: '"Press Start 2P", monospace' }}>{cfg.desc}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-gray-800 rounded-lg p-6 mb-8">
-          <h2 className="text-xl mb-4 text-center" style={{ fontFamily: '"Press Start 2P", monospace' }}>Durasi</h2>
-          <div className="flex gap-4 justify-center">
-            {durationOptions.map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => setDurationSec(opt.value)}
-                className={`px-6 py-3 rounded-lg border-2 transition-all ${
-                  durationSec === opt.value
-                    ? 'border-green-400 bg-green-900/30 scale-105'
-                    : 'border-gray-600 bg-gray-700/50 hover:border-gray-400'
-                }`}
-              >
-                <div className="font-bold" style={{ fontFamily: '"Press Start 2P", monospace' }}>{opt.label}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="text-center">
-          <button
-            onClick={handleStart}
-            disabled={!selectedDunia || loading}
-            className="px-10 py-4 bg-green-600 hover:bg-green-500 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-xl font-bold transition-all flex items-center gap-2 mx-auto"
+    <div className="min-h-[calc(100dvh-52px)] bg-pixel-bg text-pixel-cream">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+        <div className="flex items-center justify-between gap-3 mb-8">
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-2 font-pixel text-[8px] text-pixel-cream/50 hover:text-pixel-cream transition"
           >
-            <span style={{ fontFamily: '"Press Start 2P", monospace' }}>{loading ? 'Memuat...' : <><Swords size={20} /> Mulai Combat!</>}</span>
+            <ArrowLeft size={12} /> {t.back}
+          </Link>
+          <div className="flex items-center gap-1 bg-pixel-panel border-2 border-[#2A3444] p-1">
+            {(['en', 'id'] as UiLang[]).map((code) => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => setLang(code)}
+                className={`px-2.5 py-1 font-pixel text-[7px] transition ${
+                  lang === code ? 'bg-pixel-amber text-pixel-navy' : 'text-pixel-cream/50 hover:text-pixel-cream'
+                }`}
+              >
+                {code.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-400/10 border-2 border-emerald-400/25 font-pixel text-[7px] text-emerald-300 mb-5">
+            <Globe2 size={12} /> 6 LANGUAGES · WORLDWIDE
+          </div>
+          <h1 className="font-pixel text-[22px] sm:text-[34px] text-pixel-cream text-shadow-pixel flex items-center justify-center gap-3">
+            <Swords size={28} className="text-emerald-400" /> {t.selectTitle}
+          </h1>
+          <p className="font-vt text-xl text-pixel-cream/50 mt-3 max-w-2xl mx-auto">{t.selectSubtitle}</p>
+        </div>
+
+        <section className="mb-8">
+          <div className="flex items-baseline justify-between mb-3">
+            <h2 className="font-pixel text-[10px] text-pixel-amber">{t.chooseWorld}</h2>
+            <span className="font-vt text-base text-pixel-cream/30 hidden sm:block">{t.chooseWorldHint}</span>
+          </div>
+
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            {options.map((option) => {
+              const def = option.def
+              const active = selected?.id === option.id
+              return (
+                <button
+                  key={`${option.id}-${def.slug}`}
+                  type="button"
+                  onClick={() => setSelected(option)}
+                  aria-pressed={active}
+                  className={`relative text-left p-4 sm:p-5 border-2 transition-all overflow-hidden ${
+                    active
+                      ? 'bg-pixel-panel border-pixel-amber shadow-[4px_4px_0_#000] -translate-y-0.5'
+                      : 'bg-pixel-panel/60 border-[#2A3444] hover:border-[#4A5A6A] hover:bg-pixel-panel'
+                  }`}
+                >
+                  <span className="absolute inset-x-0 top-0 h-1.5" style={{ backgroundColor: def.color }} />
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="text-3xl sm:text-4xl leading-none">{def.flag}</span>
+                    {active && (
+                      <span className="w-5 h-5 bg-pixel-amber text-pixel-navy flex items-center justify-center border border-[#B8842A]">
+                        <Check size={12} />
+                      </span>
+                    )}
+                  </div>
+                  <h3 className="font-pixel text-[10px] sm:text-[12px] text-pixel-cream mt-3">{def.nativeName}</h3>
+                  <p className="font-vt text-sm sm:text-base text-pixel-cream/45 mt-1 leading-snug line-clamp-2">
+                    {def.description}
+                  </p>
+                  <div className="font-pixel text-[6px] text-pixel-cream/25 mt-3 flex items-center gap-1.5">
+                    <span style={{ color: def.color }}>{def.name.toUpperCase()}</span>
+                    <span>·</span>
+                    <span>3 LEVELS</span>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+
+        <div className="grid lg:grid-cols-[1fr_1.1fr] gap-4 mb-6">
+          <section className="pixel-panel p-5">
+            <h2 className="font-pixel text-[10px] text-pixel-cream mb-4 text-center">{t.difficulty}</h2>
+            <div className="grid grid-cols-3 gap-2">
+              {(Object.keys(difficultyCopy) as DifficultyLevel[]).map((key) => {
+                const copy = difficultyCopy[key]
+                const active = difficulty === key
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setDifficulty(key)}
+                    aria-pressed={active}
+                    className={`px-2 py-3 border-2 transition-all ${
+                      active ? 'border-white bg-white/10' : 'border-[#2A3444] bg-black/20 hover:border-[#4A5A6A]'
+                    }`}
+                  >
+                    <div className="font-pixel text-[8px] flex items-center justify-center gap-1" style={{ color: copy.color }}>
+                      {key === 'EASY' && <Target size={11} />}
+                      {key === 'MEDIUM' && <Zap size={11} />}
+                      {key === 'HARD' && <Zap size={11} />}
+                      {t[copy.key]}
+                    </div>
+                    <div className="font-vt text-sm text-pixel-cream/35 mt-1 leading-tight">{t[copy.descKey]}</div>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+
+          <section className="pixel-panel p-5">
+            <h2 className="font-pixel text-[10px] text-pixel-cream mb-4 text-center">{t.duration}</h2>
+            <div className="grid grid-cols-3 gap-2">
+              {DURATION_OPTIONS.map((option) => {
+                const active = durationSec === option.value
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setDurationSec(option.value)}
+                    aria-pressed={active}
+                    className={`px-2 py-4 border-2 transition-all font-pixel text-[8px] ${
+                      active
+                        ? 'border-emerald-400 bg-emerald-400/10 text-emerald-300'
+                        : 'border-[#2A3444] bg-black/20 text-pixel-cream/60 hover:border-[#4A5A6A]'
+                    }`}
+                  >
+                    {lang === 'id' ? option.labelId : option.labelEn}
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+        </div>
+
+        <div className="pixel-panel p-5 sm:p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3 text-center sm:text-left">
+            <div className="text-4xl">{selectedWorld?.flag || '🌐'}</div>
+            <div>
+              <div className="font-pixel text-[10px] text-pixel-cream">
+                {selectedWorld?.nativeName || t.chooseWorld}
+              </div>
+              <p className="font-vt text-base text-pixel-cream/45 max-w-sm">{worldHint}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleStart}
+            disabled={!selected || starting || loading}
+            className="w-full sm:w-auto px-8 py-3.5 bg-emerald-500 text-[#0B1410] border-2 border-emerald-300 shadow-[4px_4px_0_#000] font-pixel text-[10px] hover:bg-emerald-400 disabled:opacity-40 disabled:cursor-not-allowed active:translate-x-0.5 active:translate-y-0.5 active:shadow-none inline-flex items-center justify-center gap-2"
+          >
+            <Keyboard size={15} />
+            {starting ? t.loading : selected ? t.start : t.pickWorldFirst}
           </button>
         </div>
+
+        <p className="text-center font-vt text-base text-pixel-cream/25 mt-6">{t.howToPlayBody}</p>
       </div>
     </div>
   )
-}
-
-function getMockWords(duniaId: number, difficulty: DifficultyLevel): string[] {
-  const banks: Record<number, Record<DifficultyLevel, string[]>> = {
-    1: {
-      EASY: ['book', 'home', 'light', 'apple', 'water', 'house', 'table', 'chair', 'door', 'bird', 'fish', 'tree', 'star', 'moon', 'rain', 'snow', 'fire', 'wind', 'song', 'dance'],
-      MEDIUM: ['sunrise', 'village life', 'green forest', 'blue ocean', 'bright star', 'happy day', 'big house', 'small cat', 'old tree', 'new book'],
-      HARD: ['The quiet village woke up.', 'A gentle breeze blew through the trees.', 'She opened the old wooden door.', 'He walked along the dusty road.', 'The stars shone brightly above.'],
-    },
-    2: {
-      EASY: ['zero', 'plus', 'minus', 'seven', 'twelve', 'twenty', 'fifty', 'hundred', 'count', 'math', 'sum', 'half', 'double', 'three', 'eight', 'nine', 'four', 'five', 'six', 'ten'],
-      MEDIUM: ['y = mx + b', 'x + 5 = 12', '2x = 10', 'a + b = c', 'nine minus four', 'six times seven', 'twenty plus eight', 'three squared', 'square root', 'fifteen percent'],
-      HARD: ['2x + 10 = 24, solve for x', 'x squared plus y squared equals z squared', 'the derivative of x squared is 2x', 'if x equals five then y equals ten', 'the square root of 144 is twelve'],
-    },
-    3: {
-      EASY: ['maze', 'rune', 'owl', 'key', 'map', 'gate', 'code', 'hint', 'clue', 'path', 'door', 'lock', 'ring', 'gem', 'orb', 'seal', 'trap', 'logic', 'truth', 'solve'],
-      MEDIUM: ['deduce the pattern', 'solve the riddle', 'find the answer', 'think carefully', 'follow the clues', 'unlock the gate', 'light the torch', 'cross the bridge', 'open the chest', 'read the map'],
-      HARD: ['If A then B, not B, so not A.', 'All humans are mortal. Socrates is human.', 'Every effect has a cause.', 'I think therefore I am.', 'The map is not the territory.'],
-    },
-  }
-  return (banks[duniaId]?.[difficulty]) || banks[1].EASY
 }

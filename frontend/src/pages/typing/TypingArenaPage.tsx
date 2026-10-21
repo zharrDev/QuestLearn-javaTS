@@ -73,6 +73,7 @@ export default function TypingArenaPage() {
       difficulty={state.difficulty}
       duniaId={state.session.duniaId}
       duniaNama={state.session.duniaNama}
+      duniaSlug={state.session.duniaSlug}
       durationSec={state.durationSec}
       onSessionEnd={handleSessionEnd}
     />
