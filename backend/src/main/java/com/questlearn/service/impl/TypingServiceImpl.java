@@ -36,11 +36,12 @@ public class TypingServiceImpl implements TypingService {
             throw new ResourceNotFoundException("Tidak ada kata untuk level ini");
         }
 
-        // Shuffle and pick up to 30 words
+        // Send the full bank: the arena reshuffles it and never repeats a word
+        // until the whole pool has been used.
         Collections.shuffle(words);
         List<String> selectedWords = words.stream()
-                .limit(30)
                 .map(TypingWord::getTeks)
+                .distinct()
                 .collect(Collectors.toList());
 
         return TypingStartResponse.builder()
@@ -49,6 +50,7 @@ public class TypingServiceImpl implements TypingService {
                 .totalWords(selectedWords.size())
                 .level(level)
                 .duniaNama(dunia.getNama())
+                .duniaSlug(dunia.getSlug())
                 .duniaId(duniaId)
                 .build();
     }

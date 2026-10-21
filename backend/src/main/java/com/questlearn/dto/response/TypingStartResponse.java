@@ -10,5 +10,6 @@ public class TypingStartResponse {
     private int totalWords;
     private String level;
     private String duniaNama;
+    private String duniaSlug;
     private Long duniaId;
 }

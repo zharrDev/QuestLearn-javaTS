@@ -130,6 +130,26 @@ public class BadgeServiceImpl implements BadgeService {
                             .sum();
                     if (totalKills >= val) unlock = true;
                     break;
+                case "TYPING_SESSION": {
+                    int sessions = typingSessionRepository.findByUserIdOrderByCreatedAtDesc(userId).size();
+                    if (sessions >= val) unlock = true;
+                    break;
+                }
+                case "TYPING_COMBO": {
+                    int bestCombo = typingSessionRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                            .mapToInt(s -> s.getComboTerpanjang() != null ? s.getComboTerpanjang() : 0)
+                            .max().orElse(0);
+                    if (bestCombo >= val) unlock = true;
+                    break;
+                }
+                case "DISTINCT_DUNIA": {
+                    long worldsPlayed = typingSessionRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+                            .filter(s -> s.getDunia() != null)
+                            .map(s -> s.getDunia().getId())
+                            .distinct().count();
+                    if (worldsPlayed >= val) unlock = true;
+                    break;
+                }
                 default:
                     break;
             }
